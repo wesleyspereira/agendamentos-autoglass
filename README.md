@@ -36,4 +36,4 @@ npm run lint
 npm run build
 ```
 
-Os arquivos antigos em HTML e CSS foram mantidos na raiz do material apenas como referência visual. O desenvolvimento deve continuar dentro de `agenda-recebimento`.
+O desenvolvimento deve continuar dentro deste projeto React.
