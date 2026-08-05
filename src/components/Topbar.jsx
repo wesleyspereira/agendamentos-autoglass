@@ -5,7 +5,7 @@ function Topbar() {
 
             <div className="topbar__user">
                 <button type="button" className="notification-button" aria-label="Notificações">
-                    ♧
+                    🔔
                     <span className="notification-button__dot" />
                 </button>
                 <span>Olá, Recebimento</span>
