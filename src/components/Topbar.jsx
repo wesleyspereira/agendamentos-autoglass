@@ -8,7 +8,7 @@ function Topbar() {
                     ♧
                     <span className="notification-button__dot" />
                 </button>
-                <span>Olá, Recebimento</span>
+                <span>Olá, Usuario1</span>
                 <span aria-hidden="true">⌄</span>
             </div>
         </header>
