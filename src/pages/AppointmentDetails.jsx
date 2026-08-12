@@ -1,223 +1,185 @@
-// Importa o cabeçalho reutilizável das páginas.
-import PageHeader from "../components/PageHeader"
+import PageHeader from "../components/PageHeader";
+import StatusBadge from "../components/StatusBadge";
+import { useNavigate } from "react-router-dom";
 
-// Importa o componente responsável por exibir o status.
-import StatusBadge from "../components/StatusBadge"
+import { transportAppointments } from "../data/transportAppointments";
 
-
-// Array com o histórico de alterações do agendamento.
 const historyItems = [
-    {
-        title: "Solicitado",
-        date: "19/07/2026 • 14:32",
-        status: "blue"
-    },
-    {
-        title: "Aprovado",
-        date: "19/07/2026 • 16:45",
-        status: "green"
-    },
-    {
-        title: "Recebimento iniciado",
-        date: "20/07/2026 • 08:42",
-        status: "blue"
-    }
-]
+  {
+    id: 1,
+    title: "Solicitado pela transportadora",
+    date: "19/07/2026 · 14:32",
+    tone: "blue",
+  },
+  {
+    id: 2,
+    title: "Documentos conferidos",
+    date: "19/07/2026 · 15:20",
+    tone: "green",
+  },
+  {
+    id: 3,
+    title: "Agendamento aprovado",
+    date: "19/07/2026 · 16:45",
+    tone: "green",
+  },
+  {
+    id: 4,
+    title: "Recebimento iniciado",
+    date: "20/07/2026 · 08:02",
+    tone: "blue",
+  },
+];
 
-
-// Componente responsável pela tela de detalhes do agendamento.
 function AppointmentDetails() {
-    return (
-        <main className="page-content">
+  const navigate = useNavigate();
+  const appointment = transportAppointments[0];
 
-            {/* Cabeçalho da página. */}
-            <PageHeader title="Detalhes do Agendamento">
+  return (
+    <main className="page-content">
+      <PageHeader
+        title="Detalhes do Agendamento"
+        subtitle="Consulte os documentos, os dados da carga e o histórico desta entrega."
+      >
+        <button
+          className="button button--outline"
+          type="button"
+          onClick={() => navigate("/calendario")}
+        >
+          <span aria-hidden="true">←</span>
+          Voltar ao calendário
+        </button>
+      </PageHeader>
 
-                {/* Este botão ainda é apenas visual.
-                    Depois poderá navegar para o calendário. */}
-                <button
-                    className="button button--outline"
-                    type="button"
-                >
-                    Ver no calendário
-                </button>
-            </PageHeader>
-
-
-            {/* Grade principal dividida entre os detalhes
-                e o histórico do agendamento. */}
-            <section className="appointment-details-grid">
-
-                {/* Card com as informações do agendamento. */}
-                <article className="panel appointment-card">
-
-                    {/* Resumo principal do agendamento. */}
-                    <div className="appointment-summary">
-
-                        {/* Ícone visual do agendamento. */}
-                        <div className="appointment-summary__icon">
-                            ▣
-                        </div>
-
-                        {/* Horário e data. */}
-                        <div className="appointment-summary__time">
-                            <strong>09:30</strong>
-                            <span>20/07/2026</span>
-                        </div>
-
-                        {/* Nome do fornecedor. */}
-                        <strong className="appointment-summary__supplier">
-                            Cristal Glass
-                        </strong>
-
-                        {/* Componente que mostra o status aprovado.
-                            status é uma prop enviada para StatusBadge. */}
-                        <StatusBadge status="approved" />
-                    </div>
-
-
-                    {/* Lista com as informações detalhadas.
-                        dl representa uma lista de descrição.
-                        dt é o nome do campo.
-                        dd é o valor do campo. */}
-                    <dl className="appointment-info">
-                        <div>
-                            <dt>Fornecedor</dt>
-                            <dd>Cristal Glass</dd>
-                        </div>
-
-                        <div>
-                            <dt>CNPJ</dt>
-                            <dd>12.345.678/0001-90</dd>
-                        </div>
-
-                        <div>
-                            <dt>Pedido</dt>
-                            <dd>PC-000987/2026</dd>
-                        </div>
-
-                        <div>
-                            <dt>Data</dt>
-                            <dd>20/07/2026</dd>
-                        </div>
-
-                        <div>
-                            <dt>Horário</dt>
-                            <dd>09:30</dd>
-                        </div>
-
-                        <div>
-                            <dt>Doca</dt>
-                            <dd>Doca 01</dd>
-                        </div>
-
-                        <div>
-                            <dt>Quantidade de volumes</dt>
-                            <dd>42 volumes</dd>
-                        </div>
-
-                        <div>
-                            <dt>Observações</dt>
-                            <dd>Entregar no palete padrão.</dd>
-                        </div>
-                    </dl>
-
-
-                    {/* Seção com todos os arquivos de notas fiscais.
-                        Os três arquivos foram agrupados na mesma seção. */}
-                    <section className="invoice-section">
-                        <h3>Notas fiscais anexadas</h3>
-
-                        <div className="invoice-grid">
-
-                            {/* Primeiro arquivo anexado. */}
-                            <article className="invoice-file">
-                                <strong>▣ NF_001234567.pdf</strong>
-                                <span>1.2 MB ↓</span>
-                            </article>
-
-                            {/* Segundo arquivo anexado. */}
-                            <article className="invoice-file">
-                                <strong>▣ NF_001234569.xml</strong>
-                                <span>0.8 MB ↓</span>
-                            </article>
-
-                            {/* Terceiro arquivo anexado. */}
-                            <article className="invoice-file">
-                                <strong>▣ NF_001234568.pdf</strong>
-                                <span>1.0 MB ↓</span>
-                            </article>
-                        </div>
-                    </section>
-                </article>
-
-
-                {/* Card lateral com o histórico do agendamento. */}
-                <article className="panel history-card">
-                    <h2>Histórico</h2>
-
-                    <div className="timeline">
-
-                        {/* Percorre o array historyItems.
-                            Para cada item, cria um registro na linha do tempo. */}
-                        {historyItems.map((item) => (
-                            <div
-                                className="timeline-item"
-
-                                // A key ajuda o React a identificar cada item.
-                                key={item.title}
-                            >
-                                {/* A cor do ponto muda de acordo
-                                    com o status do histórico. */}
-                                <span
-                                    className={
-                                        `timeline-item__dot timeline-item__dot--${item.status}`
-                                    }
-                                />
-
-                                {/* Título e data do histórico. */}
-                                <div>
-                                    <strong>{item.title}</strong>
-                                    <span>{item.date}</span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </article>
-            </section>
-
-
-            {/* Área com as ações disponíveis para o agendamento. */}
-            <div className="appointment-actions">
-
-                {/* Futuramente iniciará o processo de recebimento. */}
-                <button
-                    className="button button--primary"
-                    type="button"
-                >
-                    Iniciar recebimento
-                </button>
-
-                {/* Futuramente abrirá a solicitação de ajuste. */}
-                <button
-                    className="button button--warning"
-                    type="button"
-                >
-                    Solicitar ajuste
-                </button>
-
-                {/* Futuramente cancelará o agendamento. */}
-                <button
-                    className="button button--danger"
-                    type="button"
-                >
-                    Cancelar agendamento
-                </button>
+      <section className="transport-details-grid">
+        <article className="panel transport-details-card">
+          {/* Resumo e informações principais do agendamento */}
+          <div className="transport-details-summary">
+            <div className="transport-details-summary__icon">▣</div>
+            <div>
+              <strong>{appointment.time}</strong>
+              <span>{appointment.date}</span>
             </div>
-        </main>
-    )
+            <b>{appointment.carrier}</b>
+            <StatusBadge status={appointment.status} />
+          </div>
+
+          <dl className="transport-details-list">
+            <div>
+              <dt>Transportadora</dt>
+              <dd>{appointment.carrier}</dd>
+            </div>
+            <div>
+              <dt>CNPJ</dt>
+              <dd>{appointment.carrierCnpj}</dd>
+            </div>
+            <div>
+              <dt>CT-e / MDF-e</dt>
+              <dd>
+                {appointment.documentType} {appointment.documentNumber}
+              </dd>
+            </div>
+            <div className="transport-details-list__wide">
+              <dt>Chave do CT-e / MDF-e</dt>
+              <dd>{appointment.documentKey}</dd>
+            </div>
+            <div>
+              <dt>Fornecedores</dt>
+              <dd>{appointment.suppliers.join(", ")}</dd>
+            </div>
+            <div>
+              <dt>Data e horário</dt>
+              <dd>
+                {appointment.date} às {appointment.time}
+              </dd>
+            </div>
+            <div>
+              <dt>Tipo de volume</dt>
+              <dd>{appointment.volumeTypes.join(" + ")}</dd>
+            </div>
+            <div>
+              <dt>Quantidade</dt>
+              <dd>{appointment.volumes} volumes</dd>
+            </div>
+            <div>
+              <dt>Placa do veículo</dt>
+              <dd>{appointment.plate}</dd>
+            </div>
+            <div>
+              <dt>Motorista</dt>
+              <dd>{appointment.driver}</dd>
+            </div>
+          </dl>
+
+          <section className="transport-documents">
+            <h2>Documentos anexados</h2>
+            <div>
+              <button className="transport-document-card" type="button">
+                <span
+                  className="transport-document-card__icon"
+                  aria-hidden="true"
+                >
+                  ▤
+                </span>
+                <span>
+                  <strong>
+                    {appointment.documentType} {appointment.documentNumber}.xml
+                  </strong>
+                  <small>1,2 MB · XML</small>
+                </span>
+              </button>
+              {appointment.invoices.map((invoice, index) => (
+                <button
+                  className="transport-document-card"
+                  type="button"
+                  key={invoice}
+                >
+                  <span
+                    className="transport-document-card__icon"
+                    aria-hidden="true"
+                  >
+                    ▤
+                  </span>
+                  <span>
+                    <strong>{invoice}.xml</strong>
+                    <small>{index === 0 ? "1,0 MB" : "0,8 MB"} · XML</small>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <div className="transport-details-actions">
+            <button className="button button--primary" type="button">
+              Iniciar recebimento
+            </button>
+            <button className="button button--warning" type="button">
+              Solicitar ajuste
+            </button>
+            <button className="button button--danger" type="button">
+              Cancelar agendamento
+            </button>
+          </div>
+        </article>
+
+        <aside className="panel transport-history-card">
+          <h2>Histórico</h2>
+          {/* Linha do tempo do processo de recebimento */}
+          <ol className="transport-history-timeline">
+            {historyItems.map((item) => (
+              <li
+                className={`transport-history-item transport-history-item--${item.tone}`}
+                key={item.id}
+              >
+                <strong>{item.title}</strong>
+                <span>{item.date}</span>
+              </li>
+            ))}
+          </ol>
+        </aside>
+      </section>
+    </main>
+  );
 }
 
-
-// Exporta o componente para ser utilizado nas rotas.
-export default AppointmentDetails
+export default AppointmentDetails;

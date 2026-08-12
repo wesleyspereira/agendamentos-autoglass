@@ -1,153 +1,153 @@
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 :root {
-    --navy: #063b66;
-    --blue: #087bc1;
-    --cyan: #28afcb;
-    --white: #ffffff;
-    --background: #f3f7fa;
-    --text: #11253b;
-    --text-secondary: #5d7185;
-    --border: #dae6ed;
+  --navy: #063b66;
+  --blue: #087bc1;
+  --cyan: #28afcb;
+  --white: #ffffff;
+  --background: #f3f7fa;
+  --text: #11253b;
+  --text-secondary: #5d7185;
+  --border: #dae6ed;
 }
 
 body {
-    min-width: 320px;
-    min-height: 100vh;
-    font-family: Arial, sans-serif;
-    background-color: var(--background);
-    color: var(--text);
+  min-width: 320px;
+  min-height: 100vh;
+  font-family: Arial, sans-serif;
+  background-color: var(--background);
+  color: var(--text);
 }
 
 a {
-    color: inherit;
-    text-decoration: none;
+  color: inherit;
+  text-decoration: none;
 }
 
 .app {
-    display: flex;
-    min-height: 100vh;
+  display: flex;
+  min-height: 100vh;
 }
 
 .page {
-    min-width: 0;
-    flex: 1;;
+  min-width: 0;
+  flex: 1;
 }
 .content {
-    width: 100%;
-    padding: 28px 32px 40px;
+  width: 100%;
+  padding: 28px 32px 40px;
 }
 .page-header {
-    margin-bottom: 22px;
+  margin-bottom: 22px;
 
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
 }
 
 .page-header h1 {
-    color: var(--text);
-    font-size: 24px;
-    font-weight: 700;
+  color: var(--text);
+  font-size: 24px;
+  font-weight: 700;
 }
 
 .new-appointment-button {
-    height: 42px;
-    padding: 0 18px;
+  height: 42px;
+  padding: 0 18px;
 
-    background-color: var(--blue);
-    color: var(--white);
+  background-color: var(--blue);
+  color: var(--white);
 
-    border: none;
-    border-radius: 7px;
+  border: none;
+  border-radius: 7px;
 
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .new-appointment-button:hover {
-    background-color: #066ca9;
+  background-color: #066ca9;
 }
 .indicators {
-    margin-bottom: 24px;
+  margin-bottom: 24px;
 
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 16px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
 }
 
 .indicator-card {
-    min-height: 118px;
-    padding: 18px;
+  min-height: 118px;
+  padding: 18px;
 
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 
-    background-color: var(--white);
+  background-color: var(--white);
 
-    border: 1px solid var(--border);
-    border-radius: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
 
-    box-shadow: 0 4px 14px rgba(6, 59, 102, 0.05);
+  box-shadow: 0 4px 14px rgba(6, 59, 102, 0.05);
 }
 
 .indicator-title {
-    color: var(--text-secondary);
-    font-size: 11px;
-    font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .indicator-number {
-    display: block;
+  display: block;
 
-    font-size: 30px;
-    line-height: 1;
+  font-size: 30px;
+  line-height: 1;
 }
 
 .indicator-number.blue {
-    color: var(--blue);
+  color: var(--blue);
 }
 
 .indicator-number.orange {
-    color: #f4a62a;
+  color: #f4a62a;
 }
 
 .indicator-number.green {
-    color: #20a464;
+  color: #20a464;
 }
 
 .indicator-comparison {
-    color: var(--text-secondary);
-    font-size: 10px;
+  color: var(--text-secondary);
+  font-size: 10px;
 }
 
 .indicator-comparison.positive {
-    color: #20a464;
+  color: #20a464;
 }
 @media (max-width: 900px) {
-    .indicators {
-        grid-template-columns: repeat(2, 1fr);
-    }
+  .indicators {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 550px) {
-    .content {
-        padding: 20px 16px;
-    }
+  .content {
+    padding: 20px 16px;
+  }
 
-    .page-header {
-        align-items: flex-start;
-        flex-direction: column;
-    }
+  .page-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 
-    .indicators {
-        grid-template-columns: 1fr;
-    }
+  .indicators {
+    grid-template-columns: 1fr;
+  }
 }
