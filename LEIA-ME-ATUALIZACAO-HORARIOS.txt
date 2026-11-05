@@ -1,0 +1,41 @@
+AGENDA DE RECEBIMENTOS - ATUALIZAÇÃO DE HORÁRIOS
+
+O QUE ESTA VERSÃO FAZ
+- Mostra horários disponíveis, ocupados e encerrados.
+- Impede duplicidade de data + horário no mesmo navegador.
+- Reserva o horário de entregas pendentes e aprovadas.
+- Recusar libera o horário; concluir não apaga a ocupação histórica.
+- Impede aprovação de registros antigos em conflito com um aprovado.
+- Se o último horário de hoje já passou, o formulário começa no próximo dia.
+
+ATUALIZAR O PROJETO QUE JÁ ESTÁ NO VS CODE
+1. Faça uma cópia de segurança da pasta do projeto.
+2. Abra a pasta agenda-recebimento no VS Code.
+3. Extraia o ZIP de arquivos alterados DENTRO dessa pasta.
+4. Confirme que a extração substituiu estes caminhos:
+     src/pages/NewAppointment.jsx
+     src/pages/AppointmentApproval.jsx
+     src/styles/transport-screens.css
+     src/utils/appointmentSlots.js (ARQUIVO NOVO)
+5. README.md pode ser substituído e tests/ pode ser copiado (opcionais).
+6. NÃO remova a pasta oculta .git nem apague os outros arquivos.
+7. No terminal da pasta do projeto, execute:
+     npm install
+     npm run dev
+8. Abra o endereço local mostrado pelo terminal.
+
+TESTE RÁPIDO
+1. Crie agendamento para um dia futuro às 09:30.
+2. Tente criar outro no mesmo dia às 09:30; deverá aparecer Ocupado.
+3. Entre em Aprovação e recuse o primeiro.
+4. Volte ao Novo Agendamento: 09:30 estará disponível novamente.
+5. Repita, desta vez aprovando: o horário continuará ocupado.
+
+TESTES AUTOMATIZADOS (OPCIONAL)
+node --test tests/appointmentSlots.test.mjs
+
+ATENÇÃO
+Os dados continuam salvos no localStorage do navegador. A validação não
+sincroniza outros computadores nem garante concorrência entre abas. Para
+uso corporativo simultâneo, será necessário backend com operação atômica.
+Apenas os nomes dos documentos anexados são armazenados.

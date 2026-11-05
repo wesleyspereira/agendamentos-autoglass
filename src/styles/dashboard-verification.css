@@ -1,0 +1,26 @@
+/* Estilos limitados ao Dashboard e à Verificação conectados. */
+.dashboard-connected .transport-card-header { flex-wrap: wrap; gap: 8px; }
+.dashboard-connected .dashboard-appointment-link { color: var(--text); text-decoration: none; }
+.dashboard-connected .dashboard-appointment-link:hover { background: var(--blue-light); }
+.dashboard-connected .dashboard-appointment-link:focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; }
+.dashboard-connected .transport-appointment-row b { overflow-wrap: anywhere; }
+.dashboard-connected .dashboard-empty { padding: 24px 20px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+.dashboard-connected .dashboard-list-footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 16px 20px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; }
+.dashboard-connected .dashboard-list-footer a { color: var(--blue); font-weight: 600; }
+.dashboard-connected .transport-appointment-row .status-badge { color: var(--status-color); overflow: visible; }
+.verification-connected .verification-specific-date { display: flex; align-items: center; gap: 12px; margin: 0 0 16px; color: var(--muted); font-size: 12px; }
+.verification-connected .verification-specific-date input { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; color: var(--text); font: inherit; }
+.verification-connected .verification-draft-note { margin-bottom: 16px; padding: 12px; border-radius: 6px; color: #805000; background: var(--orange-light); font-size: 12px; line-height: 1.6; }
+.verification-connected .verification-detail-link { color: var(--blue); text-decoration: underline; text-underline-offset: 3px; }
+.verification-connected .verification-footer button:disabled { opacity: .5; cursor: not-allowed; }
+.verification-connected .verification-empty { padding: 24px; text-align: center; white-space: normal; color: var(--muted); }
+/* RESPONSIVIDADE */
+@media (max-width: 768px) {
+    .dashboard-connected .transport-appointment-row { grid-template-columns: 60px minmax(0, 1fr) auto; }
+    .dashboard-connected .dashboard-suppliers { display: none; }
+}
+@media (max-width: 480px) {
+    .dashboard-connected .transport-appointment-row { grid-template-columns: 50px minmax(0, 1fr); }
+    .dashboard-connected .transport-appointment-row > .status-badge { grid-column: 2; justify-self: start; }
+    .verification-connected .verification-specific-date { align-items: flex-start; flex-direction: column; }
+}

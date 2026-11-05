@@ -1,10 +1,10 @@
 import { NavLink } from "react-router-dom";
 
 const menuItems = [
-  { to: "/", icon: "⌂", label: "Início", end: true },
-  { to: "/calendario", icon: "▣", label: "Calendário" },
-  { to: "/verificacao-agendamentos", icon: "☷", label: "Agendamentos" },
-];
+    { to: "/", icon: "⌂", label: "Início", end: true },
+    { to: "/calendario", icon: "▣", label: "Calendário" },
+    { to: "/agenda-semanal", icon: "☷", label: "Agendamentos" },
+]
 
 const futureItems = [
   { icon: "□", label: "Recebimentos" },

@@ -1,120 +1,155 @@
-import PageHeader from "../components/PageHeader";
-import StatusBadge from "../components/StatusBadge";
-import { useNavigate } from "react-router-dom";
+// Importa o Link do React Router.
+// Ele permite navegar entre páginas sem recarregar o site.
+import { Link } from "react-router-dom"
+
+// Importa os componentes reutilizáveis usados no Dashboard.
+import PageHeader from "../components/PageHeader"
+import ScheduleRow from "../components/ScheduleRow"
+import StatCard from "../components/StatCard"
+
+// Importa os dados simulados exibidos nesta página.
 import {
-  dashboardStats,
-  transportAppointments,
-} from "../data/transportAppointments";
+    dashboardStats,
+    todayAppointments,
+    upcomingAppointments
+} from "../data/appointments"
 
-// Dados demonstrativos da agenda diária, organizados como no layout do Figma.
-const dashboardTodayAppointments = [
-  { ...transportAppointments[0], time: "08:00", status: "approved" },
-  { ...transportAppointments[2], time: "09:30", status: "approved" },
-  { ...transportAppointments[1], time: "11:00", status: "progress" },
-  { ...transportAppointments[3], time: "13:30", status: "pending" },
-  { ...transportAppointments[4], time: "15:00", status: "approved" },
-];
 
+// Componente responsável por montar a tela de Visão Geral.
 function Dashboard() {
-  const navigate = useNavigate();
+    // Retorna toda a estrutura JSX que será exibida na página.
+    return (
+        <main className="page-content">
 
-  const upcomingAppointments = transportAppointments.slice(2, 7);
+            {/* Cabeçalho da página com o título e o botão de novo agendamento. */}
+            <PageHeader title="Visão Geral">
+                <button
+                    type="button"
+                    className="button button--primary"
+                >
+                    + Novo agendamento
+                </button>
+            </PageHeader>
 
-  return (
-    <main className="page-content">
-      <PageHeader
-        title="Visão Geral"
-        subtitle="Acompanhe os agendamentos e as próximas entregas em um só lugar."
-      >
-        <button
-          className="button button--primary"
-          type="button"
-          onClick={() => navigate("/novo-agendamento")}
-        >
-          <span aria-hidden="true">＋</span>
-          Novo agendamento
-        </button>
-      </PageHeader>
 
-      {/* Indicadores rápidos da operação */}
-      <section className="transport-stats-grid">
-        {dashboardStats.map((stat) => (
-          <article className="transport-stat-card" key={stat.id}>
-            <span>{stat.label}</span>
-            <strong className={`transport-stat-card--${stat.tone}`}>
-              {stat.value}
-            </strong>
-            <small>Atualizado agora</small>
-          </article>
-        ))}
-      </section>
+            {/* Seção responsável pelos cards de indicadores.
+                aria-label ajuda leitores de tela a entenderem a seção. */}
+            <section
+                className="stats-grid"
+                aria-label="Indicadores do recebimento"
+            >
+                {/* Percorre o array dashboardStats.
+                    Para cada indicador, cria um componente StatCard. */}
+                {dashboardStats.map((stat) => (
+                    <StatCard
+                        // A key ajuda o React a identificar cada card.
+                        key={stat.title}
 
-      {/* Listas de entregas atuais e futuras */}
-      <section className="transport-dashboard-grid">
-        <article className="panel transport-list-card">
-          <header className="transport-card-header">
-            <h2>Agenda de hoje</h2>
-            <span>20 de julho de 2026</span>
-          </header>
+                        // O spread envia todas as propriedades do objeto stat
+                        // como props para o componente StatCard.
+                        {...stat}
+                    />
+                ))}
+            </section>
 
-          <div className="transport-appointment-list">
-            {dashboardTodayAppointments.map((appointment) => (
-              <div className="transport-appointment-row" key={appointment.id}>
-                <div className="transport-appointment-row__time">
-                  <i
-                    className={`status-dot status-dot--${appointment.status}`}
-                    aria-hidden="true"
-                  />
-                  <strong>{appointment.time}</strong>
-                </div>
-                <div>
-                  <b>{appointment.carrier}</b>
-                  <span>
-                    {appointment.documentType} {appointment.documentNumber}
-                  </span>
-                </div>
-                <span>{appointment.suppliers.join(", ")}</span>
-                <StatusBadge status={appointment.status} />
-              </div>
-            ))}
-          </div>
-        </article>
 
-        <article className="panel transport-list-card transport-list-card--upcoming">
-          <header className="transport-card-header">
-            <h2>Próximas entregas</h2>
-          </header>
+            {/* Grade que divide o Dashboard em dois painéis. */}
+            <section className="dashboard-grid">
 
-          <div className="transport-appointment-list">
-            {upcomingAppointments.map((appointment) => (
-              <div
-                className="transport-appointment-row transport-appointment-row--upcoming"
-                key={appointment.id}
-              >
-                <div className="transport-appointment-row__time">
-                  <i
-                    className={`status-dot status-dot--${appointment.status}`}
-                    aria-hidden="true"
-                  />
-                  <strong>{appointment.date.slice(0, 5)}</strong>
-                </div>
-                <div>
-                  <b>{appointment.carrier}</b>
-                  <span>
-                    {appointment.documentType} {appointment.documentNumber}
-                  </span>
-                  <small className="transport-appointment-row__meta">
-                    {appointment.volumeTypes.join(" + ")}
-                  </small>
-                </div>
-                <StatusBadge status={appointment.status} />
-              </div>
-            ))}
-          </div>
-        </article>
-      </section>
-    </main>
-  );
+                {/* Primeiro painel: agendamentos do dia atual. */}
+                <article className="panel">
+
+                    {/* Cabeçalho do painel. */}
+                    <header className="panel__header">
+                        <div>
+                            <h2>Agenda de hoje</h2>
+                            <p>20 de julho de 2026</p>
+                        </div>
+                    </header>
+
+
+                    {/* Lista dos agendamentos de hoje. */}
+                    <div className="schedule-list">
+
+                        {/* Percorre o array todayAppointments.
+                            Para cada agendamento, cria um ScheduleRow. */}
+                        {todayAppointments.map((appointment) => (
+                            <ScheduleRow
+                                // Cria uma identificação usando
+                                // horário e fornecedor.
+                                key={
+                                    `${appointment.time}-${appointment.supplier}`
+                                }
+
+                                // Envia o objeto completo do agendamento
+                                // para o componente ScheduleRow.
+                                appointment={appointment}
+                            />
+                        ))}
+                    </div>
+
+
+                    {/* Link que leva o usuário para a Agenda Semanal. */}
+                    <Link
+                        className="panel__link"
+                        to="/agenda-semanal"
+                    >
+                        Ver agenda completa
+                    </Link>
+                </article>
+
+
+                {/* Segundo painel: próximas entregas confirmadas. */}
+                <article className="panel">
+
+                    {/* Cabeçalho do painel de próximas entregas. */}
+                    <header className="panel__header">
+                        <div>
+                            <h2>Próximas entregas</h2>
+                            <p>Programação confirmada</p>
+                        </div>
+                    </header>
+
+
+                    {/* Lista das próximas entregas. */}
+                    <div className="schedule-list">
+
+                        {/* Percorre o array upcomingAppointments.
+                            Para cada entrega, cria um ScheduleRow. */}
+                        {upcomingAppointments.map((appointment) => (
+                            <ScheduleRow
+                                // Cria uma identificação usando
+                                // a data e o horário.
+                                key={
+                                    `${appointment.date}-${appointment.time}`
+                                }
+
+                                // Envia os dados do agendamento.
+                                appointment={appointment}
+
+                                // Envia upcoming com o valor true.
+                                // O ScheduleRow pode usar essa informação
+                                // para mostrar que é uma entrega futura.
+                                upcoming
+                            />
+                        ))}
+                    </div>
+
+
+                    {/* Link que leva para a página do calendário. */}
+                    <Link
+                        className="panel__link"
+                        to="/calendario"
+                    >
+                        Ver todos os agendamentos
+                    </Link>
+                </article>
+            </section>
+
+        </main>
+    )
 }
 
-export default Dashboard;
+
+// Exporta o componente para ser utilizado nas rotas do App.jsx.
+export default Dashboard

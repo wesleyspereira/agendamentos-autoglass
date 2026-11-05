@@ -1253,3 +1253,401 @@
     border-bottom: 0;
   }
 }
+/* APROVAÇÃO DE AGENDAMENTOS */
+
+.approval-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.approval-stats .stat-card {
+  min-height: 108px;
+  padding: 18px;
+  gap: 14px;
+  box-shadow: none;
+}
+
+.approval-stats .stat-card > span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.approval-stats .stat-card > strong {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.approval-stats .text-pending {
+  color: var(--orange);
+}
+
+.approval-stats .text-approved {
+  color: var(--green);
+}
+
+.approval-stats .text-rejected {
+  color: var(--red);
+}
+
+.approval-stats .text-progress {
+  color: var(--blue);
+}
+
+/* Área branca que reúne a tabela e os detalhes. */
+.approval-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 230px;
+  align-items: start;
+  gap: 20px;
+  padding: 20px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.approval-layout > .approval-list {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.approval-list__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.approval-list__header h2 {
+  font-size: 15px;
+}
+
+.approval-list__header > span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+/* A rolagem fica dentro da tabela quando faltar espaço. */
+.approval-list .table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.approval-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 12px;
+}
+
+.approval-table th {
+  padding: 12px 10px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+}
+
+.approval-table td {
+  padding: 15px 10px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border);
+}
+
+.approval-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.approval-table tbody tr:hover {
+  background: #f7fafc;
+}
+
+.approval-table tbody tr.is-selected {
+  background: var(--blue-light);
+}
+
+.approval-table td:first-child {
+  min-width: 165px;
+}
+
+.approval-table td:first-child strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.approval-table .table-secondary-text {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.approval-table td:nth-child(2),
+.approval-table td:nth-child(3),
+.approval-table td:nth-child(4),
+.approval-table td:nth-child(5) {
+  white-space: nowrap;
+}
+
+.approval-select-button {
+  padding: 7px 10px;
+  color: var(--blue);
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.approval-select-button:hover {
+  background: var(--blue-light);
+  border-color: var(--blue);
+}
+
+/* Painel lateral de detalhes. */
+.approval-layout > .approval-details {
+  min-width: 0;
+  padding: 18px;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.approval-details h2 {
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.approval-details__content h3 {
+  margin-bottom: 10px;
+  color: var(--blue);
+  font-size: 15px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.approval-details__content dl {
+  display: grid;
+  grid-template-columns: 80px minmax(0, 1fr);
+  gap: 14px 8px;
+  margin-top: 20px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.approval-details__content dt {
+  color: var(--muted);
+}
+
+.approval-details__content dd {
+  margin: 0;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.approval-details__actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.approval-details__actions button {
+  width: 100%;
+  min-height: 40px;
+  padding: 10px 14px;
+  color: var(--white);
+  border: 0;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.approval-details__actions button:first-child {
+  background: var(--green);
+}
+
+.approval-details__actions button:last-child {
+  background: var(--red);
+}
+
+.approval-details__actions button:hover:not(:disabled) {
+  filter: brightness(0.92);
+}
+
+.approval-details__actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.approval-select-button:focus-visible,
+.approval-details__actions button:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 3px;
+}
+
+/* RESPONSIVIDADE */
+@media (max-width: 1100px) {
+  .approval-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .approval-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .approval-details__content dl {
+    grid-template-columns: 110px minmax(0, 1fr);
+  }
+
+  .approval-details__actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .approval-stats {
+    gap: 10px;
+  }
+
+  .approval-stats .stat-card {
+    min-height: 100px;
+    padding: 14px;
+  }
+
+  .approval-stats .stat-card > span {
+    font-size: 11px;
+  }
+
+  .approval-layout {
+    padding: 12px;
+    gap: 16px;
+  }
+
+  .approval-details__actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 380px) {
+  .approval-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Complementos discretos do histórico de decisões na aprovação. */
+.approval-decision-info {
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.approval-history-link {
+  display: inline-block;
+  margin-top: 14px;
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.approval-history-link:hover { text-decoration: underline; }
+.approval-history-link:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+.transport-history-item--red::before { background: var(--red); }
+
+/* Controle de horários sem alterar a identidade visual existente. */
+.booking-time-grid button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.booking-time-grid button small {
+  font-size: 8px;
+  font-weight: 600;
+}
+
+.booking-time-grid button.is-occupied:disabled {
+  border-color: #f0c6ba;
+  color: #a84e38;
+  background: #fff1eb;
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+.booking-time-grid button:disabled:not(.is-occupied) {
+  color: #9da8b2;
+  background: #f2f5f7;
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
+.booking-time-grid button:disabled:hover {
+  font-weight: 400;
+}
+
+.booking-slots-counter {
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.booking-selection-summary b { font-size: 17px; }
+
+.approval-action-feedback {
+  margin-top: 14px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #a93b34;
+}
+
+/* Reagendamento: utiliza os mesmos tons e campos do agendamento original. */
+.reschedule-summary { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 24px; padding: 22px 26px; margin-bottom: 20px; }
+.reschedule-summary h2 { margin: 5px 0; font-size: 19px; }
+.reschedule-summary p { margin-top: 6px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.reschedule-label { color: var(--muted); font-size: 11px; font-weight: 600; }
+.reschedule-current { display: flex; align-items: flex-start; flex-direction: column; gap: 8px; }
+.reschedule-current strong { color: var(--navy); font-size: 17px; }
+.reschedule-form { padding: 24px 26px; }
+.reschedule-form > h2 { font-size: 18px; margin-bottom: 8px; }
+.reschedule-help { color: var(--muted); font-size: 12px; line-height: 1.6; margin-bottom: 24px; }
+.reschedule-layout { display: grid; grid-template-columns: minmax(240px, .9fr) minmax(0, 1.4fr); gap: 32px; }
+.reschedule-layout h3 { font-size: 13px; margin-bottom: 12px; }
+.reschedule-reason { margin-top: 22px; }
+.reschedule-time-grid { margin-bottom: 12px; }
+.reschedule-time-grid button:disabled { cursor: not-allowed; }
+.reschedule-time-grid button small { font-size: 9px; }
+.reschedule-preview { margin-top: 24px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; background: var(--blue-light); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; }
+.reschedule-preview > div { display: flex; flex-direction: column; gap: 6px; }
+.reschedule-preview > div span { font-size: 11px; color: var(--muted); }
+.reschedule-preview > div strong { font-size: 14px; color: var(--navy); }
+.reschedule-preview > span { color: var(--blue); font-weight: 700; }
+.reschedule-warning { margin-top: 16px; color: #925700; background: var(--orange-light); border-radius: 6px; padding: 12px 14px; font-size: 12px; line-height: 1.6; }
+.reschedule-footer { margin-top: 22px; display: flex; gap: 12px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
+.reschedule-footer .form-feedback { margin-right: auto; color: #a93b34; font-size: 12px; }
+.reschedule-footer .button { display: inline-flex; align-items: center; justify-content: center; text-align: center; min-height: 40px; }
+.reschedule-footer button:disabled { opacity: .5; cursor: not-allowed; }
+.reschedule-success { background: var(--green-light); color: #116b45; border-radius: 7px; padding: 12px 14px; margin-top: 16px; font-size: 12px; }
+.reschedule-message { padding: 26px; display: flex; flex-direction: column; align-items: flex-start; gap: 16px; font-size: 13px; line-height: 1.6; }
+.transport-history-details { color: var(--text); font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+@media (max-width: 800px) {
+  .reschedule-layout { grid-template-columns: 1fr; gap: 24px; }
+  .reschedule-summary, .reschedule-form { padding: 18px; }
+  .reschedule-footer { justify-content: flex-start; }
+  .reschedule-footer .form-feedback { flex-basis: 100%; }
+}

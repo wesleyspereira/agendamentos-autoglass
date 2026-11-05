@@ -1,0 +1,40 @@
+AGENDA DE RECEBIMENTOS - ATUALIZACAO REAGENDAMENTO
+====================================================
+VERSAO BASE: Controle de horarios e historico integrados.
+
+COMO INSTALAR APENAS OS ARQUIVOS MODIFICADOS:
+1. Faca uma copia de seguranca do projeto atual.
+2. Abra a pasta principal do projeto (a que contem package.json).
+3. Extraia o ZIP de arquivos alterados NESSA pasta. Ele contem src/... e tests/...
+4. Aceite substituir os arquivos existentes; nao exclua src, .git, nem node_modules.
+5. No terminal do VS Code, execute: npm install e npm run dev
+
+TELAS:
+- Detalhes: botao Reagendar entrega (somente pendentes ou aprovados).
+- Aprovacao: atalho Reagendar entrega no painel lateral.
+- Nova rota: /reagendar-agendamento?id=ID_DA_ENTREGA
+
+COMPORTAMENTO:
+- Horarios ocupados, encerrados ou invalidos sao bloqueados.
+- O mesmo horario da entrega e identificado como Atual, mas nao pode ser salvo sem mudar.
+- O ID, dados da transportadora, fornecedores, volumes e documentos permanecem iguais.
+- A data e hora anteriores ficam no historico com os novos valores e motivo opcional.
+- Em uma entrega aprovada, o status volta a Pendente e a verificacao e desmarcada.
+- Recebimentos em andamento/concluidos e recusados nao podem ser reagendados.
+- Os dados continuam no localStorage; esta versao NAO possui sincronizacao entre computadores.
+
+TESTE DAS REGRAS:
+  node --test tests/rescheduleAppointment.test.mjs
+
+ARQUIVOS ALTERADOS:
+ src/App.jsx
+ src/pages/AppointmentDetails.jsx
+ src/pages/AppointmentApproval.jsx
+ src/pages/RescheduleAppointment.jsx  [NOVO]
+ src/utils/rescheduleAppointment.js      [NOVO]
+ src/styles/transport-screens.css
+ tests/rescheduleAppointment.test.mjs    [TESTES]
+
+ATENCAO: A compilacao completa (npm run build) nao foi executada neste ambiente
+porque as dependencias npm do ZIP original nao estavam instaladas.
+A sintaxe dos arquivos JSX/JS e os imports locais foram verificados.

@@ -1,0 +1,29 @@
+/* Ajustes restritos ao calendário conectado e aos detalhes. */
+.calendar-connected .transport-calendar-main { min-width: 0; overflow-x: auto; }
+.calendar-connected .transport-calendar-toolbar,
+.calendar-connected .transport-calendar-toolbar > div { flex-wrap: wrap; }
+.calendar-connected .transport-calendar-toolbar h2 { text-transform: capitalize; font-size: 14px; }
+.calendar-connected .calendar-date-picker { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; color: var(--muted); font-size: 12px; }
+.calendar-connected .calendar-date-picker input { min-height: 38px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; color: var(--text); background: white; font: inherit; }
+.calendar-connected .calendar-empty { margin-bottom: 16px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.calendar-connected .calendar-grid--day { grid-template-columns: minmax(0, 1fr); min-width: 0; }
+.calendar-connected .transport-calendar-event { display: block; overflow-wrap: anywhere; cursor: pointer; }
+.calendar-connected .transport-calendar-event[aria-pressed="true"] { outline: 2px solid var(--blue); outline-offset: 1px; }
+.calendar-connected .transport-calendar-event:focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
+.calendar-connected .transport-calendar-event--rejected { color: var(--red); background: var(--red-light); }
+.calendar-connected .transport-calendar-event--completed { color: var(--muted); background: var(--gray-light); }
+.calendar-connected .transport-calendar-details { min-width: 0; overflow-wrap: anywhere; }
+.details-connected .document-storage-note,
+.details-connected .history-empty { margin: 14px 0; font-size: 12px; line-height: 1.6; color: var(--muted); }
+.details-connected .registered-document { display: flex; align-items: center; gap: 8px; min-width: 0; max-width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 7px; font-size: 12px; overflow-wrap: anywhere; }
+.details-connected .registered-document strong { min-width: 0; }
+.details-connected .transport-details-actions { flex-wrap: wrap; }
+/* RESPONSIVIDADE */
+@media (max-width: 700px) {
+    .details-connected .transport-details-summary { grid-template-columns: 44px minmax(0, 1fr); gap: 12px; }
+    .details-connected .transport-details-summary > b,
+    .details-connected .transport-details-summary > .status-badge { grid-column: 2; }
+    .details-connected .transport-details-list { grid-template-columns: minmax(0, 1fr); }
+    .details-connected .transport-details-list__wide { grid-column: auto; }
+    .calendar-connected .calendar-date-picker { align-items: flex-start; flex-direction: column; gap: 6px; }
+}
