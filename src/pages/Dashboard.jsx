@@ -1,155 +1,82 @@
-// Importa o Link do React Router.
-// Ele permite navegar entre páginas sem recarregar o site.
-import { Link } from "react-router-dom"
-
-// Importa os componentes reutilizáveis usados no Dashboard.
+import { Link, useNavigate } from "react-router-dom"
 import PageHeader from "../components/PageHeader"
-import ScheduleRow from "../components/ScheduleRow"
-import StatCard from "../components/StatCard"
+import StatusBadge from "../components/StatusBadge"
+import { useAppointments } from "../context/AppointmentsContext"
+import { appointmentDateKey, localDateKey, sortAppointments } from "../utils/appointmentDates"
+import "../styles/dashboard-verification.css"
 
-// Importa os dados simulados exibidos nesta página.
-import {
-    dashboardStats,
-    todayAppointments,
-    upcomingAppointments
-} from "../data/appointments"
-
-
-// Componente responsável por montar a tela de Visão Geral.
 function Dashboard() {
-    // Retorna toda a estrutura JSX que será exibida na página.
+    const navigate = useNavigate()
+    const { appointments } = useAppointments()
+    const today = localDateKey()
+
+    // Usa a data real e os registros compartilhados, sem valores demonstrativos fixos.
+    const todayAppointments = sortAppointments(
+        appointments.filter((item) => appointmentDateKey(item) === today)
+    )
+    const futureAppointments = sortAppointments(appointments.filter((item) =>
+        appointmentDateKey(item) > today &&
+        item.status !== "rejected" && item.status !== "completed"
+    ))
+    const upcomingAppointments = futureAppointments.slice(0, 7)
+
+    const dashboardStats = [
+        { id: "today", label: "Agendamentos hoje", value: todayAppointments.length, tone: "blue", scope: "Entregas com data de hoje" },
+        { id: "pending", label: "Aguardando aprovação", value: appointments.filter((item) => item.status === "pending").length, tone: "orange", scope: "Todos os agendamentos" },
+        { id: "progress", label: "Em andamento", value: appointments.filter((item) => item.status === "progress").length, tone: "blue", scope: "Todos os agendamentos" },
+        { id: "completed", label: "Concluídos", value: appointments.filter((item) => item.status === "completed").length, tone: "green", scope: "Todos os agendamentos" }
+    ]
+
     return (
-        <main className="page-content">
-
-            {/* Cabeçalho da página com o título e o botão de novo agendamento. */}
-            <PageHeader title="Visão Geral">
-                <button
-                    type="button"
-                    className="button button--primary"
-                >
-                    + Novo agendamento
-                </button>
+        <main className="page-content dashboard-connected">
+            <PageHeader title="Visão Geral" subtitle="Acompanhe os agendamentos e as próximas entregas em um só lugar.">
+                <button className="button button--primary" type="button" onClick={() => navigate("/novo-agendamento")}>＋ Novo agendamento</button>
             </PageHeader>
-
-
-            {/* Seção responsável pelos cards de indicadores.
-                aria-label ajuda leitores de tela a entenderem a seção. */}
-            <section
-                className="stats-grid"
-                aria-label="Indicadores do recebimento"
-            >
-                {/* Percorre o array dashboardStats.
-                    Para cada indicador, cria um componente StatCard. */}
+            <section className="transport-stats-grid">
                 {dashboardStats.map((stat) => (
-                    <StatCard
-                        // A key ajuda o React a identificar cada card.
-                        key={stat.title}
-
-                        // O spread envia todas as propriedades do objeto stat
-                        // como props para o componente StatCard.
-                        {...stat}
-                    />
+                    <article className="transport-stat-card" key={stat.id}>
+                        <span>{stat.label}</span>
+                        <strong className={`transport-stat-card--${stat.tone}`}>{stat.value}</strong>
+                        <small>{stat.scope}</small>
+                    </article>
                 ))}
             </section>
-
-
-            {/* Grade que divide o Dashboard em dois painéis. */}
-            <section className="dashboard-grid">
-
-                {/* Primeiro painel: agendamentos do dia atual. */}
-                <article className="panel">
-
-                    {/* Cabeçalho do painel. */}
-                    <header className="panel__header">
-                        <div>
-                            <h2>Agenda de hoje</h2>
-                            <p>20 de julho de 2026</p>
-                        </div>
+            <section className="transport-dashboard-grid">
+                <article className="panel transport-list-card">
+                    <header className="transport-card-header">
+                        <h2>Agenda de hoje</h2>
+                        <span>{new Date().toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" })}</span>
                     </header>
-
-
-                    {/* Lista dos agendamentos de hoje. */}
-                    <div className="schedule-list">
-
-                        {/* Percorre o array todayAppointments.
-                            Para cada agendamento, cria um ScheduleRow. */}
+                    <div className="transport-appointment-list">
                         {todayAppointments.map((appointment) => (
-                            <ScheduleRow
-                                // Cria uma identificação usando
-                                // horário e fornecedor.
-                                key={
-                                    `${appointment.time}-${appointment.supplier}`
-                                }
-
-                                // Envia o objeto completo do agendamento
-                                // para o componente ScheduleRow.
-                                appointment={appointment}
-                            />
+                            <Link className="transport-appointment-row dashboard-appointment-link" key={appointment.id} to={`/detalhes-agendamento?id=${encodeURIComponent(appointment.id)}`} aria-label={`Ver entrega de ${appointment.carrier} às ${appointment.time}`}>
+                                <div className="transport-appointment-row__time"><i className={`status-dot status-dot--${appointment.status}`} aria-hidden="true" /><strong>{appointment.time}</strong></div>
+                                <div><b>{appointment.carrier}</b><span>{appointment.documentType} {appointment.documentNumber}</span></div>
+                                <span className="dashboard-suppliers" title={appointment.suppliers.join(", ")}>{appointment.suppliers.join(", ")}</span>
+                                <StatusBadge status={appointment.status} />
+                            </Link>
                         ))}
+                        {todayAppointments.length === 0 && <p className="dashboard-empty">Nenhuma entrega agendada para hoje.</p>}
                     </div>
-
-
-                    {/* Link que leva o usuário para a Agenda Semanal. */}
-                    <Link
-                        className="panel__link"
-                        to="/agenda-semanal"
-                    >
-                        Ver agenda completa
-                    </Link>
+                    <footer className="dashboard-list-footer"><Link to="/calendario">Abrir calendário →</Link></footer>
                 </article>
-
-
-                {/* Segundo painel: próximas entregas confirmadas. */}
-                <article className="panel">
-
-                    {/* Cabeçalho do painel de próximas entregas. */}
-                    <header className="panel__header">
-                        <div>
-                            <h2>Próximas entregas</h2>
-                            <p>Programação confirmada</p>
-                        </div>
-                    </header>
-
-
-                    {/* Lista das próximas entregas. */}
-                    <div className="schedule-list">
-
-                        {/* Percorre o array upcomingAppointments.
-                            Para cada entrega, cria um ScheduleRow. */}
+                <article className="panel transport-list-card transport-list-card--upcoming">
+                    <header className="transport-card-header"><h2>Próximas entregas</h2><span>A partir de amanhã</span></header>
+                    <div className="transport-appointment-list">
                         {upcomingAppointments.map((appointment) => (
-                            <ScheduleRow
-                                // Cria uma identificação usando
-                                // a data e o horário.
-                                key={
-                                    `${appointment.date}-${appointment.time}`
-                                }
-
-                                // Envia os dados do agendamento.
-                                appointment={appointment}
-
-                                // Envia upcoming com o valor true.
-                                // O ScheduleRow pode usar essa informação
-                                // para mostrar que é uma entrega futura.
-                                upcoming
-                            />
+                            <Link className="transport-appointment-row transport-appointment-row--upcoming dashboard-appointment-link" key={appointment.id} to={`/detalhes-agendamento?id=${encodeURIComponent(appointment.id)}`} aria-label={`Ver entrega de ${appointment.carrier} em ${appointment.date}`}>
+                                <div className="transport-appointment-row__time"><i className={`status-dot status-dot--${appointment.status}`} aria-hidden="true" /><strong>{appointment.date.slice(0, 5)}</strong></div>
+                                <div><b>{appointment.carrier}</b><span>{appointment.time} · {appointment.documentType} {appointment.documentNumber}</span><small className="transport-appointment-row__meta">{appointment.volumeTypes.join(" + ")}</small></div>
+                                <StatusBadge status={appointment.status} />
+                            </Link>
                         ))}
+                        {upcomingAppointments.length === 0 && <p className="dashboard-empty">Nenhuma entrega futura pendente, aprovada ou em andamento.</p>}
                     </div>
-
-
-                    {/* Link que leva para a página do calendário. */}
-                    <Link
-                        className="panel__link"
-                        to="/calendario"
-                    >
-                        Ver todos os agendamentos
-                    </Link>
+                    <footer className="dashboard-list-footer"><span>{upcomingAppointments.length} de {futureAppointments.length} entregas futuras</span><Link to="/verificacao-agendamentos">Ver agendamentos →</Link></footer>
                 </article>
             </section>
-
         </main>
     )
 }
 
-
-// Exporta o componente para ser utilizado nas rotas do App.jsx.
 export default Dashboard
