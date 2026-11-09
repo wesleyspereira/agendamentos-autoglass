@@ -11,19 +11,24 @@ Aplicação em React + Vite para registrar, aprovar, acompanhar e conferir agend
 - **Novo Agendamento** (`/novo-agendamento`): cadastro da transportadora, fornecedores, CT-e/MDF-e, NF-e, volumes e data, com horários livres, ocupados e encerrados.
 - **Aprovação** (`/aprovacao-agendamentos`): aprovar ou recusar agendamentos pendentes.
 
+- **Reagendamento** (`/reagendar-agendamento?id=...`): permite trocar a vaga antes da portaria.
+- **Recebimentos** (`/recebimentos`): acompanha entregas da chegada até a remessa.
+- **Ocorrências** (`/ocorrencias`): reúne registros da equipe e as soluções de cada entrega.
+- **Relatórios** (`/relatorios`): filtra entregas pela data agendada e exporta o resultado em CSV.
+
 ## Fluxo
 
 1. Em **Novo Agendamento**, a entrega entra como **Pendente**.
 2. Cada data e horário aceita **uma única entrega**; agendamentos pendentes já reservam a vaga. Recusar um agendamento libera a vaga; concluir o recebimento não apaga a ocupação histórica.
 3. Em **Aprovação**, o responsável **aprova ou recusa**; a decisão agora entra no histórico, com data e hora.
-4. Agendamentos **Aprovados** podem iniciar o recebimento em **Detalhes**.
+4. Em **Detalhes**, registre a entrada na portaria de uma entrega aprovada. Só depois será possível iniciar o recebimento.
 5. O recebimento pode passar de **Em andamento** para **Concluído**.
 6. As conferências feitas em **Verificação** são registradas com seus próprios eventos no mesmo histórico.
 
 ## Executar
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
@@ -32,14 +37,18 @@ Abra o endereço apresentado pelo Vite (normalmente `http://localhost:5173`).
 ## Verificar antes de publicar
 
 ```bash
+npm run format:check
 npm run lint
+npm test
 npm run build
 ```
+
+Use `npm run format` para aplicar o padrão do projeto: dois espaços, aspas duplas e ponto e vírgula. Os componentes e arquivos usam nomes em inglês; textos da interface e comentários ficam em português.
 
 ## Observações importantes
 
 - Os dados são compartilhados **entre as telas do mesmo navegador** pelo `AppointmentsContext`, usando `localStorage` com a chave `autoglass-agendamentos-v1`.
 - **Não existe ainda um banco de dados online ou autenticação**: usuários de computadores diferentes não compartilham a mesma lista. O bloqueio de horários funciona somente para os agendamentos presentes no mesmo navegador; para uso simultâneo em vários computadores, será preciso implementar banco de dados com reserva atômica no servidor.
-- O cadastro registra **nomes dos anexos**, mas ainda não armazena os arquivos para download.
+- O cadastro guarda os nomes dos documentos fiscais. Arquivos de **ressalvas** ficam disponíveis para download no navegador em que foram anexados (IndexedDB).
 - Para atualizar um projeto que já possui Git, copie os arquivos desta versão para dentro do repositório existente, sem apagar a pasta oculta `.git`.
 - A tela antiga `WeeklySchedule.jsx` permanece no código como legado, mas a rota ativa de calendário é `/calendario`; não foi adicionada nenhuma referência a docas ou pedidos no fluxo atual.

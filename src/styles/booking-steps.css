@@ -1,0 +1,64 @@
+.booking-step-title {
+  margin-bottom: 20px;
+}
+.booking-step-title small {
+  color: #096aa5;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.booking-step-title h2 {
+  color: #12334c;
+  font-size: 22px;
+  margin: 5px 0 0;
+}
+.booking-step-title h2:focus {
+  outline: none;
+}
+.transport-form .booking-step-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 880px;
+  margin: 0 auto;
+  width: 100%;
+}
+.booking-step-body > section[hidden] {
+  display: none;
+}
+.booking-step-body > .transport-booking-column {
+  border: 0;
+  padding: 0;
+}
+.transport-form .booking-step-body.booking-step-3 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+.transport-form .booking-step-body.booking-step-3 > section {
+  grid-area: auto;
+}
+.booking-step-body p {
+  line-height: 1.5;
+}
+.booking-review dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+.booking-review dt {
+  font-size: 12px;
+  color: var(--muted);
+}
+.booking-review dd {
+  margin: 4px 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 700px) {
+  .transport-form .booking-step-body.booking-step-3 {
+    grid-template-columns: 1fr;
+  }
+  .booking-step-body .transport-inline-fields {
+    grid-template-columns: 1fr;
+  }
+}

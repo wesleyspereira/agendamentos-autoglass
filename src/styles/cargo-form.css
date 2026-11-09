@@ -1,0 +1,126 @@
+.cargo-booking .cargo-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 0;
+  padding: 0;
+  font-size: 17px;
+}
+.cargo-title small,
+.cargo-meter-input b {
+  padding: 5px 8px;
+  background: #e4f3fe;
+  color: #075f9c;
+  border-radius: 6px;
+  font-size: 12px;
+}
+.cargo-heading,
+.cargo-supplier,
+.cargo-pair,
+.cargo-quantities {
+  display: flex;
+  gap: 10px;
+  align-items: end;
+}
+.cargo-heading {
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.cargo-heading button,
+.cargo-supplier button {
+  background: transparent;
+  border: 0;
+  color: #0069a9;
+  font-weight: 600;
+  cursor: pointer;
+}
+.cargo-supplier .transport-field,
+.cargo-pair .transport-field,
+.cargo-quantities .transport-field {
+  min-width: 0;
+  flex: 1;
+}
+.cargo-booking input {
+  min-width: 0;
+  width: 100%;
+}
+.cargo-modes {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.cargo-modes legend {
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.cargo-modes > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.cargo-modes label {
+  position: relative;
+  cursor: pointer;
+}
+.cargo-modes input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.cargo-modes span {
+  display: block;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+.cargo-modes input:checked + span {
+  background: #006caf;
+  border-color: #006caf;
+  color: white;
+  font-weight: 700;
+}
+.cargo-modes input:focus-visible + span {
+  outline: 2px solid #004b7e;
+  outline-offset: 2px;
+}
+.cargo-quantities {
+  flex-wrap: wrap;
+}
+.cargo-quantities .cargo-meter {
+  flex-basis: 100%;
+}
+.cargo-meter-input {
+  position: relative;
+  display: block;
+}
+.cargo-booking .cargo-meter-input input {
+  padding-right: 9rem;
+}
+.cargo-meter-input b {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+@media (max-width: 650px) {
+  .cargo-pair,
+  .cargo-supplier {
+    flex-wrap: wrap;
+  }
+  .cargo-supplier .transport-field {
+    flex-basis: 160px;
+  }
+}
+.cargo-modes span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}

@@ -1,40 +1,51 @@
+import { readFiscalDocument } from "../utils/fiscalDocuments";
+import { cargoModes, cargoSummary, readCargo } from "../utils/cargo";
+import "../styles/cargo-form.css";
+import "../styles/booking-steps.css";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import CargoIcon from "../components/CargoIcon";
 import PageHeader from "../components/PageHeader";
 import { transporters } from "../data/transporters";
-import { useAppointments } from "../context/AppointmentsContext";
-import { AVAILABLE_TIMES, findSlotConflict, slotStatus } from "../utils/appointmentSlots";
+import { useAppointments } from "../context/useAppointments";
+import { localDateKey } from "../utils/appointmentDates";
+import { AVAILABLE_TIMES, slotStatus } from "../utils/appointmentSlots";
 
+const steps = ["Carga e transportadora", "Documentos fiscais", "Data e horário", "Revisão"];
 const calendarWeekDays = ["D", "S", "T", "Q", "Q", "S", "S"];
-// Usa a data local para evitar diferenças de dia causadas pelo fuso horário.
-function toLocalDate(date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-}
-
 function formatDate(date) {
   return date.split("-").reverse().join("/");
 }
 
-function NewAppointment() {
+function NewAppointment({ internal = false }) {
   const navigate = useNavigate();
   const { appointments, setAppointments } = useAppointments();
+  const [step, setStep] = useState(1);
+  const [review, setReview] = useState(null);
+  const stepTitle = useRef(null);
+  function goToStep(next, message = "") {
+    setFeedback(message);
+    setStep(next);
+  }
+  useEffect(() => {
+    stepTitle.current?.focus();
+  }, [step]);
   const submittedRef = useRef(false);
-  const today = toLocalDate(new Date());
+  const today = localDateKey(new Date());
 
   // Estados dos campos e da seleção de documentos.
-  const [selectedTransporterId, setSelectedTransporterId] = useState(
-    transporters[0]?.id ?? "",
-  );
-  const [suppliers, setSuppliers] = useState([""]);
-  const [volumeType, setVolumeType] = useState("Paletes");
+  const [selectedTransporterId, setSelectedTransporterId] = useState(transporters[0]?.id ?? "");
+  const [suppliers, setSuppliers] = useState([{ name: "", cnpj: "" }]);
+  const [volumeType, setVolumeType] = useState("Palete");
+  const activeFields = cargoModes[volumeType];
   const [selectedDate, setSelectedDate] = useState(() => {
     const date = new Date();
     const lastTime = AVAILABLE_TIMES[AVAILABLE_TIMES.length - 1];
-    if (slotStatus([], toLocalDate(date), lastTime, date) === "past") {
+    if (slotStatus([], localDateKey(date), lastTime, date) === "past") {
       date.setDate(date.getDate() + 1);
     }
-    return toLocalDate(date);
+    return localDateKey(date);
   });
   const [calendarMonth, setCalendarMonth] = useState(() => {
     const [year, month] = selectedDate.split("-").map(Number);
@@ -47,10 +58,7 @@ function NewAppointment() {
   const month = calendarMonth.getMonth();
   const calendarCells = [
     ...Array(calendarMonth.getDay()).fill(null),
-    ...Array.from(
-      { length: new Date(year, month + 1, 0).getDate() },
-      (_, index) => index + 1
-    ),
+    ...Array.from({ length: new Date(year, month + 1, 0).getDate() }, (_, index) => index + 1),
   ];
   const monthLabel = calendarMonth.toLocaleDateString("pt-BR", {
     month: "long",
@@ -58,9 +66,7 @@ function NewAppointment() {
   });
 
   function changeMonth(offset) {
-    setCalendarMonth((current) =>
-      new Date(current.getFullYear(), current.getMonth() + offset, 1)
-    );
+    setCalendarMonth((current) => new Date(current.getFullYear(), current.getMonth() + offset, 1));
   }
 
   function changeDate(value) {
@@ -84,24 +90,28 @@ function NewAppointment() {
   );
 
   useEffect(() => {
+    // A revisão deve mostrar exatamente o horário que será enviado.
+    if (step === 4) return;
     setSelectedTime((currentTime) => {
       if (slotStatus(appointments, selectedDate, currentTime) === "available") {
         return currentTime;
       }
-      return AVAILABLE_TIMES.find(
-        (time) => slotStatus(appointments, selectedDate, time) === "available",
-      ) ?? "";
+      return (
+        AVAILABLE_TIMES.find(
+          (time) => slotStatus(appointments, selectedDate, time) === "available",
+        ) ?? ""
+      );
     });
-  }, [appointments, selectedDate]);
+  }, [appointments, selectedDate, step]);
 
   function addSupplier() {
-    setSuppliers((currentSuppliers) => [...currentSuppliers, ""]);
+    setSuppliers((currentSuppliers) => [...currentSuppliers, { name: "", cnpj: "" }]);
   }
 
-  function updateSupplier(index, value) {
+  function updateSupplier(index, field, value) {
     setSuppliers((currentSuppliers) =>
       currentSuppliers.map((supplier, supplierIndex) =>
-        supplierIndex === index ? value : supplier,
+        supplierIndex === index ? { ...supplier, [field]: value } : supplier,
       ),
     );
   }
@@ -117,40 +127,47 @@ function NewAppointment() {
     if (submittedRef.current) return;
     const formData = new FormData(event.currentTarget);
     const carrier = transporters.find((item) => item.id === selectedTransporterId);
-    const cleanedSuppliers = suppliers.map((supplier) => supplier.trim());
-    const documentNumber = String(formData.get("documentNumber") || "").trim();
-    const quantity = Number(formData.get("volumes"));
-    const documentKey = String(formData.get("documentKey") || "").trim();
-
-    if (!carrier || !documentNumber || cleanedSuppliers.some((supplier) => !supplier)) {
-      setFeedback("Preencha a transportadora, os fornecedores e o número do documento.");
+    const cleanedSuppliers = suppliers.map((supplier) => supplier.name.trim());
+    if (!carrier || cleanedSuppliers.some((name) => !name)) {
+      goToStep(1, "Preencha a transportadora e o nome de cada fornecedor.");
       return;
     }
 
-    if (!Number.isInteger(quantity) || quantity < 1) {
-      setFeedback("Informe uma quantidade inteira de volumes maior que zero.");
+    let cargo;
+    try {
+      cargo = readCargo(volumeType, formData);
+    } catch (error) {
+      goToStep(1, error.message);
+      return;
+    }
+    if (step === 1) {
+      goToStep(2);
       return;
     }
 
-    if (!selectedDate || !selectedTime || slotStatus(appointments, selectedDate, selectedTime) !== "available") {
-      setFeedback("Esse horário não está disponível. Escolha outra data ou horário livre.");
+    let fiscal;
+    try {
+      fiscal = readFiscalDocument(formData);
+    } catch (error) {
+      goToStep(2, error.message);
+      return;
+    }
+    if (step === 2) {
+      goToStep(3);
       return;
     }
 
-    // Verificação extra antes de salvar para impedir agendamentos duplicados.
-    if (findSlotConflict(appointments, selectedDate, selectedTime)) {
-      setFeedback("Já existe um agendamento para esta data e horário.");
-      return;
-    }
-
-    if (documentKey && !/^\d{44}$/.test(documentKey)) {
-      setFeedback("A chave deve conter exatamente 44 números, ou ficar em branco.");
+    if (
+      !selectedDate ||
+      !selectedTime ||
+      slotStatus(appointments, selectedDate, selectedTime) !== "available"
+    ) {
+      goToStep(3, "Esse horário não está disponível. Escolha uma data e um horário livres.");
       return;
     }
 
     // Mantém o mesmo formato utilizado pelas outras telas do sistema.
     const newAppointment = {
-      id: crypto.randomUUID(),
       date: formatDate(selectedDate),
       dateISO: selectedDate,
       time: selectedTime,
@@ -158,24 +175,41 @@ function NewAppointment() {
       carrier: carrier.name,
       carrierCnpj: carrier.cnpj,
       suppliers: cleanedSuppliers,
-      documentType: String(formData.get("documentType")),
-      documentNumber,
-      documentKey,
+      ...(internal && {
+        supplierDetails: suppliers.map(({ name, cnpj }) => ({
+          name: name.trim(),
+          cnpj: cnpj.trim(),
+        })),
+      }),
+      ...fiscal,
       invoices: invoiceFiles.map((file) => file.name),
       documentFiles: documentFiles.map((file) => ({ name: file.name, size: file.size })),
-      volumeTypes: volumeType === "Ambos" ? ["Paletes", "Caixas"] : [volumeType],
-      volumes: quantity,
-      plate: String(formData.get("plate") || "").trim().toUpperCase(),
+      cargo,
+      volumeTypes:
+        volumeType === "Ambos"
+          ? ["Paletes", "Caixas"]
+          : [volumeType === "Palete" ? "Paletes" : volumeType],
+      ...(cargo.pallets || cargo.boxes
+        ? { volumes: (cargo.pallets || 0) + (cargo.boxes || 0) }
+        : {}),
+      plate: String(formData.get("plate") || "")
+        .trim()
+        .toUpperCase(),
       driver: String(formData.get("driver") || "").trim(),
       observations: String(formData.get("observations") || "").trim(),
       status: "pending",
       verified: false,
-      createdAt: new Date().toISOString(),
     };
 
+    if (step === 3) {
+      setReview(newAppointment);
+      goToStep(4);
+      return;
+    }
+    const confirmed = { ...review, id: crypto.randomUUID(), createdAt: new Date().toISOString() };
     // O contexto salva a lista no navegador; a aprovação já usa essa mesma lista.
     submittedRef.current = true;
-    setAppointments((currentAppointments) => [newAppointment, ...currentAppointments]);
+    setAppointments((currentAppointments) => [confirmed, ...currentAppointments]);
     navigate("/aprovacao-agendamentos");
   }
 
@@ -191,34 +225,48 @@ function NewAppointment() {
           onClick={() => navigate("/verificacao-agendamentos")}
         >
           <span aria-hidden="true">←</span>
-          Voltar
+          Sair do formulário
         </button>
       </PageHeader>
 
       {/* Etapas do fluxo de criação do agendamento */}
       <ol className="transport-form-steps">
-        <li className="is-active">1 Carga e transportadora</li>
-        <li>2 Documentos fiscais</li>
-        <li>3 Data e horário</li>
-        <li>4 Revisão</li>
+        {steps.map((label, index) => (
+          <li
+            key={label}
+            aria-current={step === index + 1 ? "step" : undefined}
+            className={step === index + 1 ? "is-active" : ""}
+          >
+            {index + 1} {label}
+          </li>
+        ))}
       </ol>
 
       <form
         className="panel transport-form transport-form--booking"
+        noValidate
         onSubmit={submitAppointment}
       >
-        <div className="transport-booking-grid">
+        <header className="booking-step-title">
+          <small>
+            ETAPA {step} DE {steps.length}
+          </small>
+          <h2 ref={stepTitle} tabIndex={-1}>
+            {steps[step - 1]}
+          </h2>
+        </header>
+        <div className={`cargo-booking booking-step-body booking-step-${step}`}>
           {/* Coluna 1: carga, transportadora e fornecedores */}
-          <section className="transport-booking-column">
-            <h2>Carga e transportadora</h2>
+          <section hidden={step !== 1} className="transport-booking-column">
+            <h2 className="cargo-title">
+              <small>01</small> Identificação do transporte
+            </h2>
 
             <label className="transport-field">
               <span>Transportadora</span>
               <select
                 value={selectedTransporterId}
-                onChange={(event) =>
-                  setSelectedTransporterId(event.target.value)
-                }
+                onChange={(event) => setSelectedTransporterId(event.target.value)}
                 required
               >
                 {transporters.map((transporter) => (
@@ -232,88 +280,116 @@ function NewAppointment() {
               </small>
             </label>
 
-            <div className="transport-compact-heading">
-              <span>Fornecedores</span>
-              <button
-                className="button button--icon button--small"
-                type="button"
-                onClick={addSupplier}
-                aria-label="Adicionar fornecedor"
-                title="Adicionar fornecedor"
-              >
-                ＋
-              </button>
-            </div>
-
-            <div className="transport-suppliers-list transport-suppliers-list--compact">
-              {suppliers.map((supplier, index) => (
-                <div key={index}>
-                  <label className="transport-field">
-                    <span>Fornecedor {index + 1}</span>
-                    <input
-                      type="text"
-                      value={supplier}
-                      onChange={(event) =>
-                        updateSupplier(index, event.target.value)
-                      }
-                      placeholder="Digite o fornecedor"
-                      required
-                    />
-                  </label>
-
-                  {suppliers.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeSupplier(index)}
-                      aria-label={`Remover fornecedor ${index + 1}`}
-                    >
-                      ×
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <div className="transport-inline-fields">
+            <div className="cargo-pair">
               <label className="transport-field">
-                <span>Quantidade</span>
-                <input name="volumes" type="number" min="1" step="1" placeholder="Ex.: 42" required />
+                <span>Motorista</span>
+                <input name="driver" placeholder="Nome do motorista" />
               </label>
-
               <label className="transport-field">
                 <span>Placa</span>
-                <input name="plate" type="text" placeholder="ABC1D23" />
+                <input name="plate" placeholder="ABC1D23" />
               </label>
             </div>
-
-            <label className="transport-field">
-              <span>Motorista</span>
-              <input name="driver" type="text" placeholder="Nome do motorista" />
-            </label>
-
-            <fieldset className="transport-volume-selector">
+            <div className="cargo-heading">
+              <h2 className="cargo-title">
+                <small>02</small> Fornecedores
+              </h2>
+              <button type="button" onClick={addSupplier}>
+                + Adicionar fornecedor
+              </button>
+            </div>
+            {suppliers.map((supplier, index) => (
+              <div key={index} className="cargo-supplier">
+                {internal && (
+                  <label className="transport-field">
+                    <span>CNPJ</span>
+                    <input
+                      value={supplier.cnpj}
+                      onChange={(e) => updateSupplier(index, "cnpj", e.target.value)}
+                      placeholder="00.000.000/0000-00"
+                    />
+                  </label>
+                )}
+                <label className="transport-field">
+                  <span>Fornecedor</span>
+                  <input
+                    value={supplier.name}
+                    onChange={(e) => updateSupplier(index, "name", e.target.value)}
+                    placeholder="Nome do fornecedor"
+                    required
+                  />
+                </label>
+                {suppliers.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeSupplier(index)}
+                    aria-label={`Remover fornecedor ${index + 1}`}
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            ))}
+            <div className="cargo-heading">
+              <h2 className="cargo-title">
+                <small>03</small> Composição da carga
+              </h2>
+            </div>
+            <fieldset className="cargo-modes">
               <legend>Tipo de volume</legend>
               <div>
-                {["Paletes", "Caixas", "Ambos"].map((type) => (
-                  <label
-                    className={volumeType === type ? "is-selected" : ""}
-                    key={type}
-                  >
+                {Object.keys(cargoModes).map((mode) => (
+                  <label key={mode}>
                     <input
                       type="radio"
-                      name="volume-type"
-                      value={type}
-                      checked={volumeType === type}
-                      onChange={() => setVolumeType(type)}
+                      name="volumeType"
+                      value={mode}
+                      checked={volumeType === mode}
+                      onChange={() => {
+                        setVolumeType(mode);
+                        setFeedback("");
+                      }}
                     />
-                    <span>{type}</span>
+                    <span>
+                      <CargoIcon mode={mode} />
+                      {mode}
+                    </span>
                   </label>
                 ))}
               </div>
             </fieldset>
+            <div className="cargo-quantities">
+              {activeFields.includes("pallets") && (
+                <label key="pallets" className="transport-field">
+                  <span>Quantidade de paletes</span>
+                  <input name="pallets" type="number" min="1" step="1" required />
+                </label>
+              )}
+              {activeFields.includes("boxes") && (
+                <label key="boxes" className="transport-field">
+                  <span>Quantidade de caixas</span>
+                  <input name="boxes" type="number" min="1" step="1" required />
+                </label>
+              )}
+              {activeFields.includes("cubicMeters") && (
+                <label key="cubicMeters" className="transport-field cargo-meter">
+                  <span>Metragem da carga</span>
+                  <span className="cargo-meter-input">
+                    <input
+                      name="cubicMeters"
+                      aria-label="Metragem da carga em metros cúbicos"
+                      inputMode="decimal"
+                      placeholder="Ex.: 42,50"
+                      required
+                    />
+                    <b aria-hidden="true">m³ (metros cúbicos)</b>
+                  </span>
+                </label>
+              )}
+            </div>
 
             <label className="transport-field">
-              <span>Observações</span>
+              <span>Observações (opcional)</span>
               <textarea
                 name="observations"
                 rows="3"
@@ -323,12 +399,12 @@ function NewAppointment() {
           </section>
 
           {/* Coluna 2: documentos fiscais e anexos */}
-          <section className="transport-booking-column">
-            <h2>Documentos fiscais</h2>
+          <section hidden={step !== 2} className="transport-booking-column">
+            <p>Identifique o documento de transporte e selecione os arquivos da entrega.</p>
 
             <div className="transport-inline-fields">
               <label className="transport-field">
-                <span>Tipo</span>
+                <span>Tipo de documento</span>
                 <select name="documentType" defaultValue="CT-e">
                   <option>CT-e</option>
                   <option>MDF-e</option>
@@ -336,13 +412,13 @@ function NewAppointment() {
               </label>
 
               <label className="transport-field">
-                <span>Número</span>
+                <span>Número do documento</span>
                 <input name="documentNumber" type="text" placeholder="000184" required />
               </label>
             </div>
 
             <label className="transport-field">
-              <span>Chave do CT-e / MDF-e</span>
+              <span>Chave de acesso (opcional)</span>
               <input
                 type="text"
                 name="documentKey"
@@ -357,13 +433,22 @@ function NewAppointment() {
             <label className="transport-upload transport-upload--compact">
               <span>Anexar CT-e / MDF-e</span>
               <strong>☁ Selecione o XML/PDF</strong>
-              <input type="file" accept=".xml,.pdf" onChange={(event) => setDocumentFiles(Array.from(event.target.files || []))} />
+              <input
+                type="file"
+                accept=".xml,.pdf"
+                onChange={(event) => setDocumentFiles(Array.from(event.target.files || []))}
+              />
             </label>
 
             <label className="transport-upload transport-upload--compact">
               <span>Anexar NF-e</span>
               <strong>☁ Selecione um ou mais arquivos</strong>
-              <input type="file" accept=".xml,.pdf" multiple onChange={(event) => setInvoiceFiles(Array.from(event.target.files || []))} />
+              <input
+                type="file"
+                accept=".xml,.pdf"
+                multiple
+                onChange={(event) => setInvoiceFiles(Array.from(event.target.files || []))}
+              />
             </label>
 
             {[...documentFiles, ...invoiceFiles].map((file, index) => (
@@ -376,13 +461,13 @@ function NewAppointment() {
               </div>
             ))}
             <p className="transport-field__hint">
-              Nesta versão de demonstração, apenas os nomes dos documentos são
-              registrados. Os arquivos não são enviados nem armazenados.
+              Nesta versão de demonstração, apenas os nomes dos documentos são registrados. Os
+              arquivos não são enviados nem armazenados.
             </p>
           </section>
 
           {/* Coluna 3: seleção visual da data */}
-          <section className="transport-booking-column">
+          <section hidden={step !== 3} className="transport-booking-column">
             <h2>Selecione a data</h2>
 
             <label className="transport-field">
@@ -396,10 +481,7 @@ function NewAppointment() {
               />
             </label>
 
-            <div
-              className="booking-calendar"
-              aria-label={`Calendário de ${monthLabel}`}
-            >
+            <div className="booking-calendar" aria-label={`Calendário de ${monthLabel}`}>
               <header>
                 <button type="button" aria-label="Mês anterior" onClick={() => changeMonth(-1)}>
                   ‹
@@ -412,17 +494,14 @@ function NewAppointment() {
 
               <div className="booking-calendar__grid">
                 {calendarWeekDays.map((day, index) => (
-                  <span
-                    className="booking-calendar__weekday"
-                    key={`${day}-${index}`}
-                  >
+                  <span className="booking-calendar__weekday" key={`${day}-${index}`}>
                     {day}
                   </span>
                 ))}
 
                 {calendarCells.map((day, index) => {
                   if (!day) return <span key={`empty-${index}`} />;
-                  const date = toLocalDate(new Date(year, month, day));
+                  const date = localDateKey(new Date(year, month, day));
                   return (
                     <button
                       className={selectedDate === date ? "is-selected" : ""}
@@ -442,7 +521,7 @@ function NewAppointment() {
           </section>
 
           {/* Coluna 4: horários disponíveis */}
-          <section className="transport-booking-column">
+          <section hidden={step !== 3} className="transport-booking-column">
             <h2>Horários disponíveis</h2>
 
             <div className="booking-time-grid">
@@ -450,10 +529,19 @@ function NewAppointment() {
                 <button
                   className={`${selectedTime === time && status === "available" ? "is-selected" : ""} ${status === "occupied" ? "is-occupied" : ""}`.trim()}
                   type="button"
-                  onClick={() => { setSelectedTime(time); setFeedback(""); }}
+                  onClick={() => {
+                    setSelectedTime(time);
+                    setFeedback("");
+                  }}
                   aria-pressed={selectedTime === time && status === "available"}
                   aria-label={`${time} - ${status === "occupied" ? "Ocupado" : status === "past" ? "Horário encerrado" : "Disponível"}`}
-                  title={status === "occupied" ? "Já existe uma entrega neste horário" : status === "past" ? "Horário já passou" : "Disponível"}
+                  title={
+                    status === "occupied"
+                      ? "Já existe uma entrega neste horário"
+                      : status === "past"
+                        ? "Horário já passou"
+                        : "Disponível"
+                  }
                   disabled={status !== "available"}
                   key={time}
                 >
@@ -476,14 +564,58 @@ function NewAppointment() {
               <b>{selectedTimeValid ? selectedTime : "Sem horário"}</b>
             </div>
           </section>
+          {step === 4 && review && (
+            <section className="booking-review">
+              <p>Confira os dados antes de enviar o agendamento para aprovação.</p>
+              <dl>
+                {[
+                  ["Transportadora", review.carrier],
+                  ["Motorista / placa", [review.driver, review.plate].filter(Boolean).join(" · ")],
+                  ["Fornecedores", review.suppliers.join(", ")],
+                  ["Carga", cargoSummary(review)],
+                  ["Observações", review.observations],
+                  ["Documento fiscal", review.documentType + " " + review.documentNumber],
+                  ["Chave de acesso", review.documentKey],
+                  ["Anexos de transporte", review.documentFiles.map((f) => f.name).join(", ")],
+                  ["Notas fiscais", review.invoices.join(", ")],
+                  ["Entrega", review.date + " às " + review.time],
+                ].map(([label, value]) => (
+                  <div key={label}>
+                    <dt>{label}</dt>
+                    <dd>{value || "Não informado"}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          )}
         </div>
 
         <footer className="transport-form-footer">
           <span className="form-feedback" aria-live="polite">
             {feedback}
           </span>
-          <button className="button button--primary" type="submit" disabled={!selectedTimeValid}>
-            Enviar para aprovação
+          {step > 1 && (
+            <button
+              className="button button--outline"
+              type="button"
+              onClick={() => goToStep(step - 1)}
+            >
+              Voltar
+            </button>
+          )}
+          <button
+            className="button button--primary"
+            type="submit"
+            disabled={step === 3 && !selectedTimeValid}
+          >
+            {
+              [
+                "Continuar para documentos",
+                "Continuar para data e horário",
+                "Revisar agendamento",
+                "Enviar para aprovação",
+              ][step - 1]
+            }
           </button>
         </footer>
       </form>

@@ -4,18 +4,17 @@ const menuItems = [
   { to: "/", icon: "⌂", label: "Início", end: true },
   { to: "/calendario", icon: "▣", label: "Calendário" },
   { to: "/verificacao-agendamentos", icon: "☷", label: "Agendamentos" },
-  { to: "/aprovacao-agendamentos", icon: "✓", label: "Aprovação" },];
-
-const futureItems = [
-  { icon: "□", label: "Recebimentos" },
-  { icon: "△", label: "Ocorrências" },
-  { icon: "▤", label: "Relatórios" },
-  { icon: "◇", label: "Cadastros" },
+  { to: "/aprovacao-agendamentos", icon: "✓", label: "Aprovação" },
+  { to: "/recebimentos", icon: "□", label: "Recebimentos" },
+  { to: "/ocorrencias", icon: "△", label: "Ocorrências" },
+  { to: "/relatorios", icon: "▤", label: "Relatórios" },
 ];
 
-function Sidebar() {
+const futureItems = [{ icon: "◇", label: "Cadastros" }];
+
+function Sidebar({ hidden }) {
   return (
-    <aside className="sidebar">
+    <aside className="sidebar" id="menu-principal" hidden={hidden}>
       <NavLink to="/" className="brand" aria-label="Ir para a visão geral">
         <span className="brand__icon" aria-hidden="true">
           ✓
@@ -30,11 +29,11 @@ function Sidebar() {
         {menuItems.map((item) => (
           <NavLink
             key={item.to}
+            aria-label={item.label}
+            title={item.label}
             to={item.to}
             end={item.end}
-            className={({ isActive }) =>
-              `menu-item${isActive ? " menu-item--active" : ""}`
-            }
+            className={({ isActive }) => `menu-item${isActive ? " menu-item--active" : ""}`}
           >
             <span className="menu-item__icon" aria-hidden="true">
               {item.icon}
@@ -47,6 +46,9 @@ function Sidebar() {
           <button
             key={item.label}
             type="button"
+            disabled
+            aria-label={item.label + " (em breve)"}
+            title={item.label + " (em breve)"}
             className="menu-item menu-item--button"
           >
             <span className="menu-item__icon" aria-hidden="true">

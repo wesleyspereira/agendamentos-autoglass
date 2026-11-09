@@ -1,71 +1,119 @@
-import { appointmentDateKey } from "./appointmentDates.js"
-import { AVAILABLE_TIMES, findSlotConflict, isPastSlot } from "./appointmentSlots.js"
+import { appointmentDateKey, validDateISO } from "./appointmentDates.js";
+import { AVAILABLE_TIMES, findSlotConflict, isPastSlot } from "./appointmentSlots.js";
 
-// A edição do horário mantém o mesmo ID, a carga e os documentos cadastrados.
+// O reagendamento só é permitido antes da entrada na portaria.
 export function canReschedule(appointment) {
-  return Boolean(appointment && ["pending", "approved"].includes(appointment.status))
+  return Boolean(
+    appointment && !appointment.gateEntryAt && ["pending", "approved"].includes(appointment.status),
+  );
 }
 
 export function formatRescheduleDate(dateISO) {
-  return dateISO.split("-").reverse().join("/")
+  return dateISO.split("-").reverse().join("/");
 }
 
-function validDateISO(dateISO) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateISO)) return false
-  const parsed = new Date(`${dateISO}T12:00:00.000Z`)
-  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === dateISO
-}
-
-// Durante a edição, o horário do próprio agendamento não é tratado como conflito.
+// O horário da própria entrega é identificado como "current", não como ocupado.
 export function rescheduleSlotStatus(appointments, appointment, dateISO, time, now = new Date()) {
-  if (!validDateISO(dateISO) || !AVAILABLE_TIMES.includes(time)) return "invalid"
-  if (isPastSlot(dateISO, time, now)) return "past"
-  if (findSlotConflict(appointments, dateISO, time, appointment?.id)) return "occupied"
-  if (appointment && appointmentDateKey(appointment) === dateISO && appointment.time === time) return "current"
-  return "available"
+  if (!validDateISO(dateISO) || !AVAILABLE_TIMES.includes(time)) {
+    return "invalid";
+  }
+
+  if (isPastSlot(dateISO, time, now)) {
+    return "past";
+  }
+
+  if (findSlotConflict(appointments, dateISO, time, appointment?.id)) {
+    return "occupied";
+  }
+
+  if (appointment && appointmentDateKey(appointment) === dateISO && appointment.time === time) {
+    return "current";
+  }
+
+  return "available";
 }
 
-// Função pura: pode ser testada sem interface e não altera a lista original.
-export function prepareReschedule(appointments, appointmentId, dateISO, time, reason = "", now = new Date()) {
-  const appointment = appointments.find((item) => String(item.id) === String(appointmentId))
-  if (!appointment) return { error: "Agendamento não encontrado." }
-  if (!canReschedule(appointment)) return { error: "Somente entregas pendentes ou aprovadas podem ser reagendadas." }
+// Prepara o agendamento atualizado sem modificar a lista original.
+export function prepareReschedule(
+  appointments,
+  appointmentId,
+  dateISO,
+  time,
+  reason = "",
+  now = new Date(),
+) {
+  const appointment = appointments.find((item) => String(item.id) === String(appointmentId));
 
-  const status = rescheduleSlotStatus(appointments, appointment, dateISO, time, now)
-  if (status === "invalid") return { error: "Escolha uma data válida e um horário da agenda." }
-  if (status === "past") return { error: "Não é possível reagendar para um horário que já passou." }
-  if (status === "occupied") return { error: "Este horário já está ocupado. Escolha outra opção." }
-  if (status === "current") return { error: "Escolha uma data ou horário diferente do atual." }
+  if (!appointment) {
+    return { error: "Agendamento não encontrado." };
+  }
 
-  const previousDate = appointment.date
-  const previousTime = appointment.time
-  const nextDate = formatRescheduleDate(dateISO)
-  const cleanedReason = String(reason).trim()
-  const needsApproval = appointment.status === "approved"
+  if (!canReschedule(appointment)) {
+    return {
+      error: appointment.gateEntryAt
+        ? "Não é possível reagendar após a entrada na portaria."
+        : "Somente entregas pendentes ou aprovadas podem ser reagendadas.",
+    };
+  }
+
+  const slotStatus = rescheduleSlotStatus(appointments, appointment, dateISO, time, now);
+
+  switch (slotStatus) {
+    case "invalid":
+      return { error: "Escolha uma data válida e um horário da agenda." };
+
+    case "past":
+      return { error: "Não é possível reagendar para um horário que já passou." };
+
+    case "occupied":
+      return { error: "Este horário já está ocupado. Escolha outra opção." };
+
+    case "current":
+      return { error: "Escolha uma data ou horário diferente do atual." };
+  }
+
+  const previousDate = appointment.date;
+  const previousTime = appointment.time;
+  const nextDate = formatRescheduleDate(dateISO);
+  const cleanedReason = String(reason).trim();
+  const needsApproval = appointment.status === "approved";
+  const updatedAt = now.toISOString();
+
+  const details = [
+    `${previousDate} às ${previousTime} → ${nextDate} às ${time}.`,
+    cleanedReason ? `Motivo: ${cleanedReason}.` : "",
+    needsApproval ? "Aguarda nova aprovação." : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   const event = {
     id: globalThis.crypto?.randomUUID?.() ?? `reagendamento-${now.getTime()}`,
     title: "Entrega reagendada",
-    at: now.toISOString(),
+    at: updatedAt,
     tone: "blue",
-    details: `${previousDate} às ${previousTime} → ${nextDate} às ${time}.${cleanedReason ? ` Motivo: ${cleanedReason}.` : ""}${needsApproval ? " Aguarda nova aprovação." : ""}`,
+    details,
     from: { date: previousDate, time: previousTime },
     to: { date: nextDate, time },
     reason: cleanedReason,
-  }
+  };
 
+  // Preserva ID, carga e documentos. A nova data exige aprovação e conferência.
   const updatedAppointment = {
     ...appointment,
     date: nextDate,
     dateISO,
     time,
-    status: "pending", // Requer nova aprovação quando estava aprovado.
-    verified: false, // Verificação feita para a data antiga não é reaproveitada.
-    updatedAt: now.toISOString(),
+    status: "pending",
+    verified: false,
+    updatedAt,
     history: [...(appointment.history || []), event],
-  }
+  };
 
   return {
     appointment: updatedAppointment,
-    appointments: appointments.map((item) => String(item.id) === String(appointmentId) ? updatedAppointment : item),
-  }
+    appointments: appointments.map((item) =>
+      String(item.id) === String(appointmentId) ? updatedAppointment : item,
+    ),
+  };
 }

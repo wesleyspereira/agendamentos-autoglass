@@ -1,20 +1,19 @@
-function Topbar() {
+function Topbar({ menuOpen, onToggleMenu }) {
   return (
     <header className="topbar">
       <button
         type="button"
         className="icon-button"
-        aria-label="Abrir menu lateral"
+        aria-controls="menu-principal"
+        aria-expanded={menuOpen}
+        aria-label={menuOpen ? "Recolher menu lateral" : "Abrir menu lateral"}
+        onClick={onToggleMenu}
       >
         ☰
       </button>
 
       <div className="topbar__user">
-        <button
-          type="button"
-          className="notification-button"
-          aria-label="Notificações"
-        >
+        <button type="button" className="notification-button" aria-label="Notificações">
           🔔
           <span className="notification-button__dot" />
         </button>
