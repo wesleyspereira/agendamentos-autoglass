@@ -124,3 +124,75 @@
   align-items: center;
   gap: 6px;
 }
+
+/* Cada fornecedor mantém seus campos em um painel independente. */
+.supplier-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  min-width: 0;
+  overflow: hidden;
+}
+.supplier-card__header {
+  display: flex;
+  align-items: center;
+  background: #f3f8fc;
+}
+.supplier-card__toggle {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  border: 0;
+  color: var(--text);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+.supplier-card__toggle > span:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.supplier-card__toggle small {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.supplier-card__toggle-label {
+  color: var(--blue);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.supplier-card__remove {
+  border: 0;
+  background: transparent;
+  color: var(--blue);
+  padding: 12px;
+  font-size: 22px;
+  cursor: pointer;
+}
+.supplier-card__body {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  border-top: 1px solid var(--border);
+}
+.supplier-card__body[hidden] {
+  display: none;
+}
+.supplier-card__toggle:focus-visible,
+.supplier-card__remove:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: -3px;
+}
+.supplier-card .cargo-quantities > .transport-field {
+  flex-basis: 180px;
+}
+.supplier-card .cargo-quantities > .cargo-meter {
+  flex-basis: 100%;
+}

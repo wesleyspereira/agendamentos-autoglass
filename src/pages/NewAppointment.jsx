@@ -1,11 +1,12 @@
 import { readFiscalDocument } from "../utils/fiscalDocuments";
-import { cargoModes, cargoSummary, readCargo } from "../utils/cargo";
+import { cargoSummary } from "../utils/cargo";
 import "../styles/cargo-form.css";
 import "../styles/booking-steps.css";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import CargoIcon from "../components/CargoIcon";
+import SupplierCargoCard from "../components/SupplierCargoCard";
+import { createSupplier, readSupplier, sumSupplierCargo } from "../utils/supplierCargo";
 import PageHeader from "../components/PageHeader";
 import { transporters } from "../data/transporters";
 import { useAppointments } from "../context/useAppointments";
@@ -36,9 +37,9 @@ function NewAppointment({ internal = false }) {
 
   // Estados dos campos e da seleção de documentos.
   const [selectedTransporterId, setSelectedTransporterId] = useState(transporters[0]?.id ?? "");
-  const [suppliers, setSuppliers] = useState([{ name: "", cnpj: "" }]);
-  const [volumeType, setVolumeType] = useState("Palete");
-  const activeFields = cargoModes[volumeType];
+  const [suppliers, setSuppliers] = useState(() => [createSupplier()]);
+  const [expandedIds, setExpandedIds] = useState(() => [suppliers[0].id]);
+  const [supplierErrors, setSupplierErrors] = useState({});
   const [selectedDate, setSelectedDate] = useState(() => {
     const date = new Date();
     const lastTime = AVAILABLE_TIMES[AVAILABLE_TIMES.length - 1];
@@ -105,21 +106,39 @@ function NewAppointment({ internal = false }) {
   }, [appointments, selectedDate, step]);
 
   function addSupplier() {
-    setSuppliers((currentSuppliers) => [...currentSuppliers, { name: "", cnpj: "" }]);
+    const supplier = createSupplier();
+    setSuppliers((current) => [...current, supplier]);
+    // O novo fornecedor abre sozinho; os anteriores continuam salvos e recolhidos.
+    setExpandedIds([supplier.id]);
   }
 
-  function updateSupplier(index, field, value) {
-    setSuppliers((currentSuppliers) =>
-      currentSuppliers.map((supplier, supplierIndex) =>
-        supplierIndex === index ? { ...supplier, [field]: value } : supplier,
-      ),
+  function updateSupplier(id, field, value) {
+    setSuppliers((current) =>
+      current.map((supplier) => (supplier.id === id ? { ...supplier, [field]: value } : supplier)),
+    );
+    setSupplierErrors((current) => ({ ...current, [id]: "" }));
+    setFeedback("");
+  }
+
+  function toggleSupplier(id) {
+    setExpandedIds((current) =>
+      current.includes(id) ? current.filter((value) => value !== id) : [...current, id],
     );
   }
 
-  function removeSupplier(index) {
-    setSuppliers((currentSuppliers) =>
-      currentSuppliers.filter((_, supplierIndex) => supplierIndex !== index),
-    );
+  function removeSupplier(id) {
+    if (suppliers.length === 1) return;
+    const remaining = suppliers.filter((supplier) => supplier.id !== id);
+    setSuppliers(remaining);
+    setExpandedIds((current) => {
+      const visible = current.filter((value) => value !== id);
+      return visible.length ? visible : [remaining[0].id];
+    });
+    setSupplierErrors((current) => {
+      const next = { ...current };
+      delete next[id];
+      return next;
+    });
   }
 
   function submitAppointment(event) {
@@ -127,19 +146,34 @@ function NewAppointment({ internal = false }) {
     if (submittedRef.current) return;
     const formData = new FormData(event.currentTarget);
     const carrier = transporters.find((item) => item.id === selectedTransporterId);
-    const cleanedSuppliers = suppliers.map((supplier) => supplier.name.trim());
-    if (!carrier || cleanedSuppliers.some((name) => !name)) {
-      goToStep(1, "Preencha a transportadora e o nome de cada fornecedor.");
+    if (!carrier) {
+      goToStep(1, "Selecione a transportadora.");
       return;
     }
 
-    let cargo;
+    const supplierDetails = [];
+    const errors = {};
+    for (const supplier of suppliers) {
+      try {
+        supplierDetails.push(readSupplier(supplier, internal));
+      } catch (error) {
+        errors[supplier.id] = error.message;
+      }
+    }
+    setSupplierErrors(errors);
+    if (Object.keys(errors).length) {
+      setExpandedIds(Object.keys(errors));
+      goToStep(1, "Revise os fornecedores destacados antes de continuar.");
+      return;
+    }
+    let totals;
     try {
-      cargo = readCargo(volumeType, formData);
+      totals = sumSupplierCargo(supplierDetails);
     } catch (error) {
       goToStep(1, error.message);
       return;
     }
+    const { cargo, volumeTypes } = totals;
     if (step === 1) {
       goToStep(2);
       return;
@@ -174,21 +208,13 @@ function NewAppointment({ internal = false }) {
       carrierId: carrier.id,
       carrier: carrier.name,
       carrierCnpj: carrier.cnpj,
-      suppliers: cleanedSuppliers,
-      ...(internal && {
-        supplierDetails: suppliers.map(({ name, cnpj }) => ({
-          name: name.trim(),
-          cnpj: cnpj.trim(),
-        })),
-      }),
+      suppliers: supplierDetails.map((supplier) => supplier.name),
+      supplierDetails,
       ...fiscal,
       invoices: invoiceFiles.map((file) => file.name),
       documentFiles: documentFiles.map((file) => ({ name: file.name, size: file.size })),
       cargo,
-      volumeTypes:
-        volumeType === "Ambos"
-          ? ["Paletes", "Caixas"]
-          : [volumeType === "Palete" ? "Paletes" : volumeType],
+      volumeTypes,
       ...(cargo.pallets || cargo.boxes
         ? { volumes: (cargo.pallets || 0) + (cargo.boxes || 0) }
         : {}),
@@ -299,95 +325,18 @@ function NewAppointment({ internal = false }) {
               </button>
             </div>
             {suppliers.map((supplier, index) => (
-              <div key={index} className="cargo-supplier">
-                {internal && (
-                  <label className="transport-field">
-                    <span>CNPJ</span>
-                    <input
-                      value={supplier.cnpj}
-                      onChange={(e) => updateSupplier(index, "cnpj", e.target.value)}
-                      placeholder="00.000.000/0000-00"
-                    />
-                  </label>
-                )}
-                <label className="transport-field">
-                  <span>Fornecedor</span>
-                  <input
-                    value={supplier.name}
-                    onChange={(e) => updateSupplier(index, "name", e.target.value)}
-                    placeholder="Nome do fornecedor"
-                    required
-                  />
-                </label>
-                {suppliers.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeSupplier(index)}
-                    aria-label={`Remover fornecedor ${index + 1}`}
-                  >
-                    ×
-                  </button>
-                )}
-              </div>
+              <SupplierCargoCard
+                key={supplier.id}
+                supplier={supplier}
+                index={index}
+                internal={internal}
+                expanded={expandedIds.includes(supplier.id)}
+                onToggle={() => toggleSupplier(supplier.id)}
+                onChange={(field, value) => updateSupplier(supplier.id, field, value)}
+                onRemove={suppliers.length > 1 ? () => removeSupplier(supplier.id) : undefined}
+                error={supplierErrors[supplier.id]}
+              />
             ))}
-            <div className="cargo-heading">
-              <h2 className="cargo-title">
-                <small>03</small> Composição da carga
-              </h2>
-            </div>
-            <fieldset className="cargo-modes">
-              <legend>Tipo de volume</legend>
-              <div>
-                {Object.keys(cargoModes).map((mode) => (
-                  <label key={mode}>
-                    <input
-                      type="radio"
-                      name="volumeType"
-                      value={mode}
-                      checked={volumeType === mode}
-                      onChange={() => {
-                        setVolumeType(mode);
-                        setFeedback("");
-                      }}
-                    />
-                    <span>
-                      <CargoIcon mode={mode} />
-                      {mode}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-            <div className="cargo-quantities">
-              {activeFields.includes("pallets") && (
-                <label key="pallets" className="transport-field">
-                  <span>Quantidade de paletes</span>
-                  <input name="pallets" type="number" min="1" step="1" required />
-                </label>
-              )}
-              {activeFields.includes("boxes") && (
-                <label key="boxes" className="transport-field">
-                  <span>Quantidade de caixas</span>
-                  <input name="boxes" type="number" min="1" step="1" required />
-                </label>
-              )}
-              {activeFields.includes("cubicMeters") && (
-                <label key="cubicMeters" className="transport-field cargo-meter">
-                  <span>Metragem da carga</span>
-                  <span className="cargo-meter-input">
-                    <input
-                      name="cubicMeters"
-                      aria-label="Metragem da carga em metros cúbicos"
-                      inputMode="decimal"
-                      placeholder="Ex.: 42,50"
-                      required
-                    />
-                    <b aria-hidden="true">m³ (metros cúbicos)</b>
-                  </span>
-                </label>
-              )}
-            </div>
-
             <label className="transport-field">
               <span>Observações (opcional)</span>
               <textarea
@@ -572,7 +521,11 @@ function NewAppointment({ internal = false }) {
                   ["Transportadora", review.carrier],
                   ["Motorista / placa", [review.driver, review.plate].filter(Boolean).join(" · ")],
                   ["Fornecedores", review.suppliers.join(", ")],
-                  ["Carga", cargoSummary(review)],
+                  ["Total da carga", cargoSummary(review)],
+                  ...review.supplierDetails.map((supplier, index) => [
+                    "Carga do fornecedor " + (index + 1),
+                    supplier.name + " · " + cargoSummary(supplier),
+                  ]),
                   ["Observações", review.observations],
                   ["Documento fiscal", review.documentType + " " + review.documentNumber],
                   ["Chave de acesso", review.documentKey],

@@ -593,7 +593,15 @@ function Operation({ appointmentId, internal }) {
 
           <div>
             <dt>Fornecedores</dt>
-            <dd>{appointment.suppliers.join(", ")}</dd>
+            <dd>
+              {appointment.supplierDetails?.some((supplier) => supplier.cargo)
+                ? appointment.supplierDetails.map((supplier, index) => (
+                    <div key={supplier.id || index}>
+                      <strong>{supplier.name}</strong> — {cargoSummary(supplier)}
+                    </div>
+                  ))
+                : appointment.suppliers.join(", ")}
+            </dd>
           </div>
 
           <div>
