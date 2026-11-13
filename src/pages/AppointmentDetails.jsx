@@ -77,13 +77,13 @@ function DocumentSearch({ appointments, navigate }) {
   const term = normalize(query);
   const matches = term
     ? appointments.filter((item) =>
-        [
-          [item.documentType, item.documentNumber].join(" "),
-          item.documentKey,
-          ...(item.invoices || []),
-          ...(item.documentFiles || []).map((file) => file.name),
-        ].some((value) => normalize(value).includes(term)),
-      )
+      [
+        [item.documentType, item.documentNumber].join(" "),
+        item.documentKey,
+        ...(item.invoices || []),
+        ...(item.documentFiles || []).map((file) => file.name),
+      ].some((value) => normalize(value).includes(term)),
+    )
     : [];
 
   return (
@@ -267,13 +267,13 @@ function Operation({ appointmentId, internal }) {
   const history = [
     ...(appointment.createdAt
       ? [
-          {
-            id: `created-${appointment.id}`,
-            title: "Agendamento criado",
-            at: appointment.createdAt,
-            tone: "blue",
-          },
-        ]
+        {
+          id: `created-${appointment.id}`,
+          title: "Agendamento criado",
+          at: appointment.createdAt,
+          tone: "blue",
+        },
+      ]
       : []),
     ...(appointment.history || []),
   ];
@@ -389,13 +389,13 @@ function Operation({ appointmentId, internal }) {
       : status === "rejected"
         ? []
         : [
-            ...(status === "approved" && !gateEntryAt ? ["Registrar entrada na portaria"] : []),
-            ...(status === "approved" ? ["Iniciar recebimento"] : []),
-            ...(["approved", "progress"].includes(status)
-              ? ["Conferir a carga e concluir o recebimento"]
-              : []),
-            ...(!shipment ? ["Criar remessa"] : []),
-          ];
+          ...(status === "approved" && !gateEntryAt ? ["Registrar entrada na portaria"] : []),
+          ...(status === "approved" ? ["Iniciar recebimento"] : []),
+          ...(["approved", "progress"].includes(status)
+            ? ["Conferir a carga e concluir o recebimento"]
+            : []),
+          ...(!shipment ? ["Criar remessa"] : []),
+        ];
 
   function addRecord(entry) {
     if (entry.title === OPENED && !internal) return;
@@ -596,10 +596,12 @@ function Operation({ appointmentId, internal }) {
             <dd>
               {appointment.supplierDetails?.some((supplier) => supplier.cargo)
                 ? appointment.supplierDetails.map((supplier, index) => (
-                    <div key={supplier.id || index}>
-                      <strong>{supplier.name}</strong> — {cargoSummary(supplier)}
-                    </div>
-                  ))
+                  <div key={supplier.id || index}>
+                    <strong>{supplier.name}</strong>
+                    {" — "}
+                    {cargoSummary(supplier)}
+                  </div>
+                ))
                 : appointment.suppliers.join(", ")}
             </dd>
           </div>

@@ -6,6 +6,7 @@
   padding: 0;
   font-size: 17px;
 }
+
 .cargo-title small,
 .cargo-meter-input b {
   padding: 5px 8px;
@@ -14,6 +15,7 @@
   border-radius: 6px;
   font-size: 12px;
 }
+
 .cargo-heading,
 .cargo-supplier,
 .cargo-pair,
@@ -22,6 +24,7 @@
   gap: 10px;
   align-items: end;
 }
+
 .cargo-heading {
   border-top: 1px solid var(--border);
   padding-top: 14px;
@@ -29,6 +32,7 @@
   justify-content: space-between;
   flex-wrap: wrap;
 }
+
 .cargo-heading button,
 .cargo-supplier button {
   background: transparent;
@@ -37,42 +41,50 @@
   font-weight: 600;
   cursor: pointer;
 }
+
 .cargo-supplier .transport-field,
 .cargo-pair .transport-field,
 .cargo-quantities .transport-field {
   min-width: 0;
   flex: 1;
 }
+
 .cargo-booking input {
   min-width: 0;
   width: 100%;
 }
+
 .cargo-modes {
   margin: 0;
   padding: 0;
   border: 0;
   min-width: 0;
 }
+
 .cargo-modes legend {
   margin-bottom: 8px;
   font-size: 12px;
   font-weight: 600;
 }
-.cargo-modes > div {
+
+.cargo-modes>div {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
+
 .cargo-modes label {
   position: relative;
   cursor: pointer;
 }
+
 .cargo-modes input {
   position: absolute;
   width: 1px;
   height: 1px;
   opacity: 0;
 }
+
 .cargo-modes span {
   display: block;
   border: 1px solid var(--border);
@@ -80,29 +92,36 @@
   padding: 8px 10px;
   font-size: 12px;
 }
-.cargo-modes input:checked + span {
+
+.cargo-modes input:checked+span {
   background: #006caf;
   border-color: #006caf;
   color: white;
   font-weight: 700;
 }
-.cargo-modes input:focus-visible + span {
+
+.cargo-modes input:focus-visible+span {
   outline: 2px solid #004b7e;
   outline-offset: 2px;
 }
+
 .cargo-quantities {
   flex-wrap: wrap;
 }
+
 .cargo-quantities .cargo-meter {
   flex-basis: 100%;
 }
+
 .cargo-meter-input {
   position: relative;
   display: block;
 }
+
 .cargo-booking .cargo-meter-input input {
   padding-right: 9rem;
 }
+
 .cargo-meter-input b {
   position: absolute;
   right: 5px;
@@ -110,34 +129,22 @@
   transform: translateY(-50%);
   pointer-events: none;
 }
-@media (max-width: 650px) {
-  .cargo-pair,
-  .cargo-supplier {
-    flex-wrap: wrap;
-  }
-  .cargo-supplier .transport-field {
-    flex-basis: 160px;
-  }
-}
-.cargo-modes span {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
 
-/* Cada fornecedor mantém seus campos em um painel independente. */
+/* Painel independente para os dados e a carga de cada fornecedor. */
 .supplier-card {
+  min-width: 0;
+  overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: #fff;
-  min-width: 0;
-  overflow: hidden;
 }
+
 .supplier-card__header {
   display: flex;
   align-items: center;
   background: #f3f8fc;
 }
+
 .supplier-card__toggle {
   display: flex;
   flex: 1;
@@ -147,52 +154,79 @@
   gap: 12px;
   padding: 14px;
   border: 0;
-  color: var(--text);
   background: transparent;
+  color: var(--text);
+  font: inherit;
   text-align: left;
   cursor: pointer;
-  font: inherit;
 }
-.supplier-card__toggle > span:first-child {
+
+.supplier-card__toggle>span:first-child {
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
 .supplier-card__toggle small {
   display: block;
   margin-top: 5px;
   color: var(--muted);
   font-size: 12px;
 }
+
 .supplier-card__toggle-label {
   color: var(--blue);
   font-size: 12px;
   white-space: nowrap;
 }
+
 .supplier-card__remove {
+  padding: 12px;
   border: 0;
   background: transparent;
   color: var(--blue);
-  padding: 12px;
   font-size: 22px;
   cursor: pointer;
 }
+
 .supplier-card__body {
   display: grid;
   gap: 16px;
   padding: 16px;
   border-top: 1px solid var(--border);
 }
+
 .supplier-card__body[hidden] {
   display: none;
 }
+
 .supplier-card__toggle:focus-visible,
 .supplier-card__remove:focus-visible {
   outline: 2px solid var(--blue);
   outline-offset: -3px;
 }
-.supplier-card .cargo-quantities > .transport-field {
+
+.supplier-card .cargo-quantities>.transport-field {
   flex-basis: 180px;
 }
-.supplier-card .cargo-quantities > .cargo-meter {
+
+.supplier-card .cargo-quantities>.cargo-meter {
   flex-basis: 100%;
+}
+
+@media (max-width: 650px) {
+
+  .cargo-pair,
+  .cargo-supplier {
+    flex-wrap: wrap;
+  }
+
+  .cargo-supplier .transport-field {
+    flex-basis: 160px;
+  }
+}
+
+.cargo-modes span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
