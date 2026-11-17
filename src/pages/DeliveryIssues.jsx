@@ -1,3 +1,4 @@
+import { documentLabel } from "../utils/fiscalDocuments";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -7,14 +8,6 @@ import PageToolbar from "../components/PageToolbar";
 import { useAppointments } from "../context/useAppointments";
 
 import { OPENED, RESOLVED, deliveryIssues } from "../utils/deliveryIssues";
-
-function documentLabel(appointment) {
-  return (
-    [appointment.documentType, appointment.documentNumber].filter(Boolean).join(" ") ||
-    appointment.document ||
-    "Documento não informado"
-  );
-}
 
 function ResolutionForm({ onSave, onCancel }) {
   const [solution, setSolution] = useState("");

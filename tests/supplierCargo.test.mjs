@@ -16,7 +16,7 @@ test("cada fornecedor salva apenas as quantidades do tipo selecionado", () => {
   for (const [volumeType, expected] of [
     ["Palete", { pallets: 8 }],
     ["Caixas", { boxes: 24 }],
-    ["Ambos", { pallets: 8, boxes: 24, cubicMeters: 42.5 }],
+    ["Ambos", { pallets: 8, boxes: 24 }],
     ["Metragem da carga", { cubicMeters: 42.5 }],
   ]) {
     assert.deepEqual(readSupplier(supplier({ volumeType })).cargo, expected);
@@ -31,7 +31,7 @@ test("soma cargas sem perder a distribuição por fornecedor após salvar", () =
   assert.notEqual(details[0].id, details[1].id);
   const restored = JSON.parse(JSON.stringify(details));
   assert.deepEqual(sumSupplierCargo(restored), {
-    cargo: { pallets: 16, boxes: 24, cubicMeters: 42.5 },
+    cargo: { pallets: 16, boxes: 24 },
     volumeTypes: ["Paletes", "Caixas"],
   });
   assert.deepEqual(restored[0].cargo, { pallets: 8 });
@@ -41,7 +41,7 @@ test("soma cargas sem perder a distribuição por fornecedor após salvar", () =
 test("valida fornecedor e quantidades inclusive quando o painel estiver recolhido", () => {
   assert.throws(() => readSupplier(supplier({ name: "  " })));
   assert.throws(() => readSupplier(supplier({ pallets: "0" })));
-  assert.throws(() => readSupplier(supplier({ volumeType: "Ambos", cubicMeters: "" })));
+  assert.throws(() => readSupplier(supplier({ volumeType: "Ambos", boxes: "" })));
   assert.throws(() => readSupplier(supplier({ volumeType: "desconhecido" })));
 });
 

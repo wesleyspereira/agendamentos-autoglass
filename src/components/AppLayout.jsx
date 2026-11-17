@@ -3,13 +3,18 @@ import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 
-function AppLayout() {
+function AppLayout({ userName, onLeave }) {
   const [menuOpen, setMenuOpen] = useState(true);
   return (
     <div className="app-shell">
       <Sidebar hidden={!menuOpen} />
       <div className="app-shell__main">
-        <Topbar menuOpen={menuOpen} onToggleMenu={() => setMenuOpen((open) => !open)} />
+        <Topbar
+          userName={userName}
+          onLeave={onLeave}
+          menuOpen={menuOpen}
+          onToggleMenu={() => setMenuOpen((open) => !open)}
+        />
         <Outlet />
       </div>
     </div>

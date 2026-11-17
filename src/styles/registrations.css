@@ -1,0 +1,61 @@
+.registry-tabs,
+.registry-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px;
+}
+.registry-page > nav {
+  margin: 16px 0;
+}
+.registry-layout,
+.fiscal-file-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.registry-form,
+.registry-list {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+.registry-row label {
+  flex: 1;
+  min-width: 160px;
+}
+.registry-list article {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+  overflow-wrap: anywhere;
+}
+.registry-list article p {
+  margin: 5px 0;
+}
+.fiscal-file-grid section {
+  min-width: 0;
+}
+.fiscal-file-grid label {
+  display: grid;
+  gap: 8px;
+}
+.fiscal-file-grid ul {
+  padding: 0;
+  list-style: none;
+}
+.fiscal-file-grid li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  overflow-wrap: anywhere;
+}
+@media (max-width: 700px) {
+  .registry-layout,
+  .fiscal-file-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,3 +1,4 @@
+import { documentLabel } from "../utils/fiscalDocuments";
 import { localDateKey, appointmentDateKey } from "../utils/appointmentDates";
 import { cargoSummary } from "../utils/cargo";
 import { useState } from "react";
@@ -270,9 +271,9 @@ function CalendarPage() {
                   <dd>{selectedAppointment.date}</dd>
                 </div>
                 <div>
-                  <dt>CT-e / MDF-e</dt>
+                  <dt>Documento fiscal</dt>
                   <dd>
-                    {selectedAppointment.documentType} {selectedAppointment.documentNumber}
+                    {documentLabel(selectedAppointment)}
                   </dd>
                 </div>
                 <div>

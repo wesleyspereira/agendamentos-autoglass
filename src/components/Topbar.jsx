@@ -1,4 +1,4 @@
-function Topbar({ menuOpen, onToggleMenu }) {
+function Topbar({ menuOpen, onToggleMenu, userName, onLeave }) {
   return (
     <header className="topbar">
       <button
@@ -17,8 +17,10 @@ function Topbar({ menuOpen, onToggleMenu }) {
           🔔
           <span className="notification-button__dot" />
         </button>
-        <span>Olá, Recebimento</span>
-        <span aria-hidden="true">⌄</span>
+        <span>Olá, {userName}</span>
+        <button type="button" className="button button--outline" onClick={onLeave}>
+          Sair
+        </button>
       </div>
     </header>
   );

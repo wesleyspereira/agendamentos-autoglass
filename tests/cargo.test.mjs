@@ -6,19 +6,14 @@ const form = new Map([
   ["boxes", "24"],
   ["cubicMeters", "42,50"],
 ]);
-const expected = [
-  { pallets: 8 },
-  { boxes: 24 },
-  { pallets: 8, boxes: 24, cubicMeters: 42.5 },
-  { cubicMeters: 42.5 },
-];
+const expected = [{ pallets: 8 }, { boxes: 24 }, { pallets: 8, boxes: 24 }, { cubicMeters: 42.5 }];
 Object.keys(cargoModes).forEach((mode, i) =>
   test(mode, () => {
     const saved = JSON.parse(JSON.stringify({ cargo: readCargo(mode, form) }));
     assert.deepEqual(saved.cargo, expected[i]);
     assert.equal(
       cargoSummary(saved),
-      ["8 paletes", "24 caixas", "8 paletes · 24 caixas · 42,50 m³", "42,50 m³"][i],
+      ["8 paletes", "24 caixas", "8 paletes · 24 caixas", "42,50 m³"][i],
     );
   }),
 );

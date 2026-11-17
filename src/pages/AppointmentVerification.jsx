@@ -1,3 +1,4 @@
+import { documentLabel } from "../utils/fiscalDocuments";
 import { cargoSummary } from "../utils/cargo";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -206,7 +207,7 @@ function AppointmentVerification() {
                 <th>Horário</th>
                 <th>Transportadora</th>
                 <th>Fornecedores</th>
-                <th>CT-e / MDF-e</th>
+                <th>Documento fiscal</th>
                 <th>NF-e</th>
                 <th>Volumes</th>
                 <th>Status</th>
@@ -233,7 +234,7 @@ function AppointmentVerification() {
                     {appointment.suppliers.join(", ")}
                   </td>
                   <td>
-                    {appointment.documentType} {appointment.documentNumber}
+                    {documentLabel(appointment)}
                   </td>
                   <td>{appointment.invoices.length} registradas</td>
                   <td>{cargoSummary(appointment)}</td>

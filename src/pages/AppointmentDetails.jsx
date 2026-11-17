@@ -1,3 +1,5 @@
+import { documentLabel } from "../utils/fiscalDocuments";
+import { loadFiscalFile } from "../utils/fiscalStorage";
 import { OPENED } from "../utils/deliveryIssues";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
@@ -77,13 +79,13 @@ function DocumentSearch({ appointments, navigate }) {
   const term = normalize(query);
   const matches = term
     ? appointments.filter((item) =>
-      [
-        [item.documentType, item.documentNumber].join(" "),
-        item.documentKey,
-        ...(item.invoices || []),
-        ...(item.documentFiles || []).map((file) => file.name),
-      ].some((value) => normalize(value).includes(term)),
-    )
+        [
+          [item.documentType, item.documentNumber].join(" "),
+          item.documentKey,
+          ...(item.invoices || []),
+          ...(item.documentFiles || []).map((file) => file.name),
+        ].some((value) => normalize(value).includes(term)),
+      )
     : [];
 
   return (
@@ -110,9 +112,7 @@ function DocumentSearch({ appointments, navigate }) {
                 navigate("/detalhes-agendamento?id=" + encodeURIComponent(item.id));
               }}
             >
-              <strong>
-                {item.documentType} {item.documentNumber}
-              </strong>
+              <strong>{documentLabel(item)}</strong>
               <small>
                 {item.carrier} · {item.date} às {item.time}
               </small>
@@ -267,13 +267,13 @@ function Operation({ appointmentId, internal }) {
   const history = [
     ...(appointment.createdAt
       ? [
-        {
-          id: `created-${appointment.id}`,
-          title: "Agendamento criado",
-          at: appointment.createdAt,
-          tone: "blue",
-        },
-      ]
+          {
+            id: `created-${appointment.id}`,
+            title: "Agendamento criado",
+            at: appointment.createdAt,
+            tone: "blue",
+          },
+        ]
       : []),
     ...(appointment.history || []),
   ];
@@ -389,13 +389,13 @@ function Operation({ appointmentId, internal }) {
       : status === "rejected"
         ? []
         : [
-          ...(status === "approved" && !gateEntryAt ? ["Registrar entrada na portaria"] : []),
-          ...(status === "approved" ? ["Iniciar recebimento"] : []),
-          ...(["approved", "progress"].includes(status)
-            ? ["Conferir a carga e concluir o recebimento"]
-            : []),
-          ...(!shipment ? ["Criar remessa"] : []),
-        ];
+            ...(status === "approved" && !gateEntryAt ? ["Registrar entrada na portaria"] : []),
+            ...(status === "approved" ? ["Iniciar recebimento"] : []),
+            ...(["approved", "progress"].includes(status)
+              ? ["Conferir a carga e concluir o recebimento"]
+              : []),
+            ...(!shipment ? ["Criar remessa"] : []),
+          ];
 
   function addRecord(entry) {
     if (entry.title === OPENED && !internal) return;
@@ -407,9 +407,9 @@ function Operation({ appointmentId, internal }) {
     setMessage(entry.title + ". Consulte o histórico abaixo.");
   }
 
-  async function download(entry) {
+  async function download(entry, fiscal = false) {
     try {
-      const blob = await localAttachment(entry.id);
+      const blob = fiscal ? await loadFiscalFile(entry.id) : await localAttachment(entry.id);
       if (!blob) throw new Error("Arquivo indisponível");
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -432,10 +432,8 @@ function Operation({ appointmentId, internal }) {
         <div className="op-summary">
           <dl className="op-summary" style={{ flex: 1, margin: 0 }}>
             <div>
-              <dt>CT-e / MDF-e</dt>
-              <dd>
-                {appointment.documentType} {appointment.documentNumber}
-              </dd>
+              <dt>Documento da entrega</dt>
+              <dd>{documentLabel(appointment)}</dd>
             </div>
             <div>
               <dt>Transportadora</dt>
@@ -580,10 +578,8 @@ function Operation({ appointmentId, internal }) {
           </div>
 
           <div>
-            <dt>CT-e / MDF-e</dt>
-            <dd>
-              {appointment.documentType} {appointment.documentNumber}
-            </dd>
+            <dt>Documento da entrega</dt>
+            <dd>{documentLabel(appointment)}</dd>
           </div>
 
           <div className="transport-details-list__wide">
@@ -596,12 +592,13 @@ function Operation({ appointmentId, internal }) {
             <dd>
               {appointment.supplierDetails?.some((supplier) => supplier.cargo)
                 ? appointment.supplierDetails.map((supplier, index) => (
-                  <div key={supplier.id || index}>
-                    <strong>{supplier.name}</strong>
-                    {" — "}
-                    {cargoSummary(supplier)}
-                  </div>
-                ))
+                    <div key={supplier.id || index}>
+                      <strong>{supplier.name}</strong>
+                      {internal && supplier.cnpj && <small> · CNPJ: {supplier.cnpj}</small>}
+                      {" — "}
+                      {cargoSummary(supplier)}
+                    </div>
+                  ))
                 : appointment.suppliers.join(", ")}
             </dd>
           </div>
@@ -647,17 +644,28 @@ function Operation({ appointmentId, internal }) {
         <section className="transport-documents">
           <h2>Documentos registrados</h2>
           <p className="document-storage-note">
-            Esta demonstração registra os nomes dos documentos. Os arquivos não estão disponíveis
-            para download.
+            {appointment.fiscalAttachments?.length
+              ? "Arquivos salvos neste navegador."
+              : "Agendamento antigo: somente os nomes foram registrados."}
           </p>
-
           <div>
-            {documents.map((name, index) => (
-              <div key={`${name}-${index}`} className="registered-document">
-                <span aria-hidden="true">▤</span>
-                <strong>{name}</strong>
-              </div>
-            ))}
+            {appointment.fiscalAttachments?.length
+              ? appointment.fiscalAttachments.map((file) => (
+                  <button
+                    key={file.id}
+                    type="button"
+                    className="button button--outline"
+                    onClick={() => download({ id: file.id, attachmentName: file.name }, true)}
+                  >
+                    Baixar {file.kind}: {file.name}
+                  </button>
+                ))
+              : documents.map((name, index) => (
+                  <div key={`${name}-${index}`} className="registered-document">
+                    <span aria-hidden="true">▤</span>
+                    <strong>{name}</strong>
+                  </div>
+                ))}
             {documents.length === 0 && <p>Nenhum arquivo registrado.</p>}
           </div>
         </section>

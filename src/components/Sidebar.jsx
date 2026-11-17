@@ -8,9 +8,8 @@ const menuItems = [
   { to: "/recebimentos", icon: "□", label: "Recebimentos" },
   { to: "/ocorrencias", icon: "△", label: "Ocorrências" },
   { to: "/relatorios", icon: "▤", label: "Relatórios" },
+  { to: "/cadastros", icon: "◇", label: "Cadastros" },
 ];
-
-const futureItems = [{ icon: "◇", label: "Cadastros" }];
 
 function Sidebar({ hidden }) {
   return (
@@ -40,22 +39,6 @@ function Sidebar({ hidden }) {
             </span>
             <span>{item.label}</span>
           </NavLink>
-        ))}
-
-        {futureItems.map((item) => (
-          <button
-            key={item.label}
-            type="button"
-            disabled
-            aria-label={item.label + " (em breve)"}
-            title={item.label + " (em breve)"}
-            className="menu-item menu-item--button"
-          >
-            <span className="menu-item__icon" aria-hidden="true">
-              {item.icon}
-            </span>
-            <span>{item.label}</span>
-          </button>
         ))}
       </nav>
     </aside>

@@ -1,0 +1,61 @@
+.access-page {
+  --access-navy: #093b60;
+  --access-blue: #087dc1;
+  --access-text: #112c45;
+  --access-muted: #566e82;
+  --access-border: #cfdfeb;
+
+  display: grid;
+  grid-template-columns: minmax(0, 42.5fr) minmax(0, 57.5fr);
+  min-height: 100vh;
+  min-height: 100dvh;
+  color: var(--access-text);
+  background: #f3f8fb;
+}
+
+.access-page,
+.access-page * {
+  box-sizing: border-box;
+}
+
+.access-page button,
+.access-page input {
+  font: inherit;
+}
+
+.access-presentation {
+  display: flex;
+  flex-direction: column;
+  padding: clamp(28px, 4.5vw, 72px);
+  color: #fff;
+  background: var(--access-navy);
+}
+
+.access-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  align-self: flex-start;
+}
+
+.access-brand__icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 10px;
+  color: var(--access-blue);
+  background: #fff;
+  font-size: 25px;
+  font-weight: 800;
+}
+
+.access-brand__text {
+  display: grid;
+  line-height: 1.15;
+}
+
+.access-brand__text--title {
+  font-size: 1.5rem;
+  font-weight: 600;
+}

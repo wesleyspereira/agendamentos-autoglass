@@ -5,5 +5,6 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   // No Pages, a aplicação fica em uma subpasta. Os arquivos acompanham o HTML.
   base: "./",
+  publicDir: "src/public",
   plugins: [react()],
 });

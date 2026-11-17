@@ -1,3 +1,4 @@
+import { documentLabel } from "../utils/fiscalDocuments";
 import { canReschedule } from "../utils/rescheduleAppointment";
 import { cargoSummary } from "../utils/cargo";
 import { useState } from "react";
@@ -130,7 +131,7 @@ function AppointmentApproval() {
               <thead>
                 <tr>
                   <th>Transportadora</th>
-                  <th>CT-e / MDF-e</th>
+                  <th>Documento fiscal</th>
                   <th>Data</th>
                   <th>Horário</th>
                   <th>NF-e</th>
@@ -154,7 +155,7 @@ function AppointmentApproval() {
                     </td>
 
                     <td>
-                      {appointment.documentType} {appointment.documentNumber}
+                      {documentLabel(appointment)}
                     </td>
 
                     <td>{appointment.date}</td>
@@ -205,7 +206,7 @@ function AppointmentApproval() {
               <dl>
                 <dt>Documento</dt>
                 <dd>
-                  {selectedAppointment.documentType} {selectedAppointment.documentNumber}
+                  {documentLabel(selectedAppointment)}
                 </dd>
 
                 <dt>Data</dt>

@@ -1,3 +1,8 @@
+import FiscalFileField from "../components/FiscalFileField";
+import { readRegistry, findSupplier, normalizeCnpj } from "../utils/registry";
+import { validateFiscalFiles } from "../utils/fiscalDocuments";
+import { storeFiscalFiles } from "../utils/fiscalStorage";
+import "../styles/registrations.css";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -8,26 +13,14 @@ import { useAppointments } from "../context/useAppointments";
 import { transporters } from "../data/transporters";
 
 import { localDateKey } from "../utils/appointmentDates";
-import {
-  AVAILABLE_TIMES,
-  slotStatus,
-} from "../utils/appointmentSlots";
+import { AVAILABLE_TIMES, slotStatus } from "../utils/appointmentSlots";
 import { cargoSummary } from "../utils/cargo";
-import {
-  createSupplier,
-  readSupplier,
-  sumSupplierCargo,
-} from "../utils/supplierCargo";
+import { createSupplier, readSupplier, sumSupplierCargo } from "../utils/supplierCargo";
 
 import "../styles/cargo-form.css";
 import "../styles/booking-steps.css";
 
-const steps = [
-  "Carga e transportadora",
-  "Documentos fiscais",
-  "Data e horário",
-  "Revisão",
-];
+const steps = ["Carga e transportadora", "Documentos fiscais", "Data e horário", "Revisão"];
 
 const calendarWeekDays = ["D", "S", "T", "Q", "Q", "S", "S"];
 
@@ -35,71 +28,24 @@ function formatDate(date) {
   return date.split("-").reverse().join("/");
 }
 
-// Valida o MDF-e obrigatório e o CT-e opcional deste formulário.
-function readFiscalDocument(formData) {
-  const documentNumber = String(formData.get("documentNumber") ?? "").trim();
-  const documentKey = String(formData.get("documentKey") ?? "").trim();
-  const cteNumber = String(formData.get("cteNumber") ?? "").trim();
-  const cteKey = String(formData.get("cteKey") ?? "").trim();
-
-  if (!documentNumber) {
-    throw new Error("Informe o número do MDF-e.");
-  }
-
-  if (!/^\d+$/.test(documentNumber)) {
-    throw new Error("O número do MDF-e deve conter apenas números.");
-  }
-
-  if (documentKey && !/^\d{44}$/.test(documentKey)) {
-    throw new Error("A chave do MDF-e deve conter exatamente 44 números.");
-  }
-
-  if (cteNumber && !/^\d+$/.test(cteNumber)) {
-    throw new Error("O número do CT-e deve conter apenas números.");
-  }
-
-  if (cteKey && !cteNumber) {
-    throw new Error("Informe o número do CT-e ou apague sua chave de acesso.");
-  }
-
-  if (cteKey && !/^\d{44}$/.test(cteKey)) {
-    throw new Error("A chave do CT-e deve conter exatamente 44 números.");
-  }
-
-  // Preserva os campos principais utilizados pelas outras telas.
-  return {
-    documentType: "MDF-e",
-    documentNumber,
-    documentKey,
-    cteNumber,
-    cteKey,
-  };
-}
-
-function NewAppointment({ internal = false }) {
+function NewAppointment() {
   const navigate = useNavigate();
   const { appointments, setAppointments } = useAppointments();
 
   const stepTitle = useRef(null);
   const submittedRef = useRef(false);
-  const ctePanel = useRef(null);
+  const [saving, setSaving] = useState(false);
 
   const [step, setStep] = useState(1);
   const [review, setReview] = useState(null);
   const [feedback, setFeedback] = useState("");
 
-  const [selectedTransporterId, setSelectedTransporterId] = useState(
-    transporters[0]?.id ?? "",
-  );
+  const [selectedTransporterId, setSelectedTransporterId] = useState(transporters[0]?.id ?? "");
 
   // Cada fornecedor possui identificação, tipo de volume e quantidades.
-  const [suppliers, setSuppliers] = useState(() => [
-    createSupplier(),
-  ]);
+  const [suppliers, setSuppliers] = useState(() => [createSupplier()]);
 
-  const [expandedIds, setExpandedIds] = useState(() => [
-    suppliers[0].id,
-  ]);
+  const [expandedIds, setExpandedIds] = useState(() => [suppliers[0].id]);
 
   const [supplierErrors, setSupplierErrors] = useState({});
 
@@ -113,9 +59,7 @@ function NewAppointment({ internal = false }) {
     const lastTime = AVAILABLE_TIMES[AVAILABLE_TIMES.length - 1];
 
     // Se os horários de hoje terminaram, começa no próximo dia.
-    if (
-      slotStatus([], localDateKey(date), lastTime, date) === "past"
-    ) {
+    if (slotStatus([], localDateKey(date), lastTime, date) === "past") {
       date.setDate(date.getDate() + 1);
     }
 
@@ -135,10 +79,7 @@ function NewAppointment({ internal = false }) {
   const calendarCells = [
     ...Array(calendarMonth.getDay()).fill(null),
 
-    ...Array.from(
-      { length: new Date(year, month + 1, 0).getDate() },
-      (_, index) => index + 1,
-    ),
+    ...Array.from({ length: new Date(year, month + 1, 0).getDate() }, (_, index) => index + 1),
   ];
 
   const monthLabel = calendarMonth.toLocaleDateString("pt-BR", {
@@ -151,13 +92,10 @@ function NewAppointment({ internal = false }) {
     status: slotStatus(appointments, selectedDate, time),
   }));
 
-  const freeCount = statuses.filter(
-    (item) => item.status === "available",
-  ).length;
+  const freeCount = statuses.filter((item) => item.status === "available").length;
 
   const selectedTimeValid = statuses.some(
-    (item) =>
-      item.time === selectedTime && item.status === "available",
+    (item) => item.time === selectedTime && item.status === "available",
   );
 
   useEffect(() => {
@@ -169,18 +107,13 @@ function NewAppointment({ internal = false }) {
     if (step === 4) return;
 
     setSelectedTime((currentTime) => {
-      if (
-        slotStatus(appointments, selectedDate, currentTime) ===
-        "available"
-      ) {
+      if (slotStatus(appointments, selectedDate, currentTime) === "available") {
         return currentTime;
       }
 
       return (
         AVAILABLE_TIMES.find(
-          (time) =>
-            slotStatus(appointments, selectedDate, time) ===
-            "available",
+          (time) => slotStatus(appointments, selectedDate, time) === "available",
         ) ?? ""
       );
     });
@@ -192,14 +125,7 @@ function NewAppointment({ internal = false }) {
   }
 
   function changeMonth(offset) {
-    setCalendarMonth(
-      (current) =>
-        new Date(
-          current.getFullYear(),
-          current.getMonth() + offset,
-          1,
-        ),
-    );
+    setCalendarMonth((current) => new Date(current.getFullYear(), current.getMonth() + offset, 1));
   }
 
   function changeDate(value) {
@@ -222,10 +148,19 @@ function NewAppointment({ internal = false }) {
   }
 
   function updateSupplier(id, field, value) {
+    let matched;
+    if (field === "cnpj") {
+      try {
+        matched = findSupplier(readRegistry().suppliers, value);
+      } catch {
+        setFeedback("Não foi possível consultar os fornecedores.");
+        return;
+      }
+    }
     setSuppliers((current) =>
       current.map((supplier) =>
         supplier.id === id
-          ? { ...supplier, [field]: value }
+          ? { ...supplier, [field]: value, ...(field === "cnpj" && { name: matched?.name || "" }) }
           : supplier,
       ),
     );
@@ -240,9 +175,7 @@ function NewAppointment({ internal = false }) {
 
   function toggleSupplier(id) {
     setExpandedIds((current) =>
-      current.includes(id)
-        ? current.filter((value) => value !== id)
-        : [...current, id],
+      current.includes(id) ? current.filter((value) => value !== id) : [...current, id],
     );
   }
 
@@ -250,9 +183,7 @@ function NewAppointment({ internal = false }) {
     // O agendamento precisa ter pelo menos um fornecedor.
     if (suppliers.length === 1) return;
 
-    const remaining = suppliers.filter(
-      (supplier) => supplier.id !== id,
-    );
+    const remaining = suppliers.filter((supplier) => supplier.id !== id);
 
     setSuppliers(remaining);
 
@@ -269,16 +200,14 @@ function NewAppointment({ internal = false }) {
     });
   }
 
-  function submitAppointment(event) {
+  async function submitAppointment(event) {
     event.preventDefault();
 
     if (submittedRef.current) return;
 
     const formData = new FormData(event.currentTarget);
 
-    const carrier = transporters.find(
-      (item) => item.id === selectedTransporterId,
-    );
+    const carrier = transporters.find((item) => item.id === selectedTransporterId);
 
     if (!carrier) {
       goToStep(1, "Selecione a transportadora.");
@@ -291,7 +220,18 @@ function NewAppointment({ internal = false }) {
     // Valida os dados de todos os fornecedores, inclusive os recolhidos.
     for (const supplier of suppliers) {
       try {
-        supplierDetails.push(readSupplier(supplier, internal));
+        const registered = findSupplier(readRegistry().suppliers, supplier.cnpj);
+        if (!registered)
+          throw new Error(
+            "CNPJ não cadastrado. Confira o número ou solicite o cadastro do fornecedor.",
+          );
+        supplierDetails.push({
+          ...readSupplier(
+            { ...supplier, name: registered.name, cnpj: normalizeCnpj(supplier.cnpj) },
+            true,
+          ),
+          supplierId: registered.id,
+        });
       } catch (error) {
         errors[supplier.id] = error.message;
       }
@@ -303,10 +243,7 @@ function NewAppointment({ internal = false }) {
       // Abre os painéis com erro para facilitar a correção.
       setExpandedIds(Object.keys(errors));
 
-      goToStep(
-        1,
-        "Revise os fornecedores destacados antes de continuar.",
-      );
+      goToStep(1, "Revise os fornecedores destacados antes de continuar.");
 
       return;
     }
@@ -327,15 +264,9 @@ function NewAppointment({ internal = false }) {
       return;
     }
 
-    let fiscal;
-
     try {
-      fiscal = readFiscalDocument(formData);
+      validateFiscalFiles(invoiceFiles, documentFiles);
     } catch (error) {
-      // Mostra os campos opcionais quando algum dado do CT-e precisa de correção.
-      if (error.message.includes("CT-e") && ctePanel.current) {
-        ctePanel.current.open = true;
-      }
       goToStep(2, error.message);
       return;
     }
@@ -349,13 +280,9 @@ function NewAppointment({ internal = false }) {
     if (
       !selectedDate ||
       !selectedTime ||
-      slotStatus(appointments, selectedDate, selectedTime) !==
-        "available"
+      slotStatus(appointments, selectedDate, selectedTime) !== "available"
     ) {
-      goToStep(
-        3,
-        "Esse horário não está disponível. Escolha uma data e um horário livres.",
-      );
+      goToStep(3, "Esse horário não está disponível. Escolha uma data e um horário livres.");
 
       return;
     }
@@ -374,8 +301,6 @@ function NewAppointment({ internal = false }) {
 
       // Guarda a composição individual de cada fornecedor.
       supplierDetails,
-
-      ...fiscal,
 
       invoices: invoiceFiles.map((file) => file.name),
 
@@ -399,9 +324,7 @@ function NewAppointment({ internal = false }) {
 
       driver: String(formData.get("driver") || "").trim(),
 
-      observations: String(
-        formData.get("observations") || "",
-      ).trim(),
+      observations: String(formData.get("observations") || "").trim(),
 
       status: "pending",
       verified: false,
@@ -427,6 +350,18 @@ function NewAppointment({ internal = false }) {
     // Impede que cliques repetidos criem a mesma entrega duas vezes.
     submittedRef.current = true;
 
+    setSaving(true);
+    try {
+      confirmed.fiscalAttachments = await storeFiscalFiles(invoiceFiles, documentFiles);
+    } catch {
+      submittedRef.current = false;
+      setSaving(false);
+      goToStep(
+        2,
+        "Não foi possível guardar os anexos neste navegador. Confira o espaço disponível e tente novamente.",
+      );
+      return;
+    }
     setAppointments((current) => [confirmed, ...current]);
 
     navigate("/aprovacao-agendamentos");
@@ -452,9 +387,7 @@ function NewAppointment({ internal = false }) {
         {steps.map((label, index) => (
           <li
             key={label}
-            aria-current={
-              step === index + 1 ? "step" : undefined
-            }
+            aria-current={step === index + 1 ? "step" : undefined}
             className={step === index + 1 ? "is-active" : ""}
           >
             {index + 1} {label}
@@ -477,14 +410,9 @@ function NewAppointment({ internal = false }) {
           </h2>
         </header>
 
-        <div
-          className={`cargo-booking booking-step-body booking-step-${step}`}
-        >
+        <div className={`cargo-booking booking-step-body booking-step-${step}`}>
           {/* Etapa 1: transporte e carga por fornecedor. */}
-          <section
-            hidden={step !== 1}
-            className="transport-booking-column"
-          >
+          <section hidden={step !== 1} className="transport-booking-column">
             <h2 className="cargo-title">
               <small>01</small> Identificação do transporte
             </h2>
@@ -494,16 +422,11 @@ function NewAppointment({ internal = false }) {
 
               <select
                 value={selectedTransporterId}
-                onChange={(event) =>
-                  setSelectedTransporterId(event.target.value)
-                }
+                onChange={(event) => setSelectedTransporterId(event.target.value)}
                 required
               >
                 {transporters.map((transporter) => (
-                  <option
-                    value={transporter.id}
-                    key={transporter.id}
-                  >
+                  <option value={transporter.id} key={transporter.id}>
                     {transporter.name}
                   </option>
                 ))}
@@ -517,10 +440,7 @@ function NewAppointment({ internal = false }) {
             <div className="cargo-pair">
               <label className="transport-field">
                 <span>Motorista</span>
-                <input
-                  name="driver"
-                  placeholder="Nome do motorista"
-                />
+                <input name="driver" placeholder="Nome do motorista" />
               </label>
 
               <label className="transport-field">
@@ -544,17 +464,10 @@ function NewAppointment({ internal = false }) {
                 key={supplier.id}
                 supplier={supplier}
                 index={index}
-                internal={internal}
                 expanded={expandedIds.includes(supplier.id)}
                 onToggle={() => toggleSupplier(supplier.id)}
-                onChange={(field, value) =>
-                  updateSupplier(supplier.id, field, value)
-                }
-                onRemove={
-                  suppliers.length > 1
-                    ? () => removeSupplier(supplier.id)
-                    : undefined
-                }
+                onChange={(field, value) => updateSupplier(supplier.id, field, value)}
+                onRemove={suppliers.length > 1 ? () => removeSupplier(supplier.id) : undefined}
                 error={supplierErrors[supplier.id]}
               />
             ))}
@@ -570,142 +483,28 @@ function NewAppointment({ internal = false }) {
             </label>
           </section>
 
-          {/* Etapa 2: identificação e documentos fiscais. */}
-          <section
-            hidden={step !== 2}
-            className="transport-booking-column"
-          >
-            <p>
-              Identifique o documento de transporte e selecione os
-              arquivos da entrega.
-            </p>
-
-            <div className="transport-inline-fields">
-              <label className="transport-field">
-                <span>Tipo de documento</span>
-                <select name="documentType" defaultValue="MDF-e">
-                  <option value="MDF-e">MDF-e (obrigatório)</option>
-                </select>
-              </label>
-
-              <label className="transport-field">
-                <span>Número do documento (obrigatório)</span>
-                <input
-                  name="documentNumber"
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]+"
-                  placeholder="000184"
-                  required
-                />
-              </label>
+          <section hidden={step !== 2} className="transport-booking-column">
+            <div className="fiscal-file-grid">
+              <FiscalFileField
+                title="Notas fiscais (obrigatório)"
+                files={invoiceFiles}
+                setFiles={setInvoiceFiles}
+                onError={setFeedback}
+              />
+              <FiscalFileField
+                title="CT-e (opcional)"
+                files={documentFiles}
+                setFiles={setDocumentFiles}
+                onError={setFeedback}
+              />
             </div>
-
-            <label className="transport-field">
-              <span>Chave de acesso (opcional)</span>
-              <input
-                name="documentKey"
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]{44}"
-                maxLength={44}
-                title="Informe exatamente 44 números ou deixe em branco."
-                placeholder="Digite os 44 números"
-              />
-            </label>
-
-            {/* O CT-e complementar fica recolhido para manter o formulário compacto. */}
-            <details ref={ctePanel}>
-              <summary style={{ cursor: "pointer", color: "var(--blue)" }}>
-                Adicionar CT-e (opcional)
-              </summary>
-
-              <div className="transport-inline-fields">
-                <label className="transport-field">
-                  <span>Número do CT-e (opcional)</span>
-                  <input
-                    name="cteNumber"
-                    type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]+"
-                    placeholder="Digite o número do CT-e, se houver"
-                  />
-                </label>
-
-                <label className="transport-field">
-                  <span>Chave do CT-e (opcional)</span>
-                  <input
-                    name="cteKey"
-                    type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]{44}"
-                    maxLength={44}
-                    title="Informe exatamente 44 números ou deixe em branco."
-                    placeholder="Digite os 44 números"
-                  />
-                </label>
-              </div>
-            </details>
-
-            <label className="transport-upload transport-upload--compact">
-              <span>Anexar CT-e / MDF-e</span>
-              <strong>☁ Selecione o XML/PDF</strong>
-              <input
-                type="file"
-                accept=".xml,.pdf"
-                multiple
-                onChange={(event) =>
-                  setDocumentFiles(Array.from(event.target.files || []))
-                }
-              />
-            </label>
-
-            <label className="transport-upload transport-upload--compact">
-              <span>Anexar NF-e</span>
-              <strong>☁ Selecione um ou mais arquivos</strong>
-
-              <input
-                type="file"
-                accept=".xml,.pdf"
-                multiple
-                onChange={(event) =>
-                  setInvoiceFiles(
-                    Array.from(event.target.files || []),
-                  )
-                }
-              />
-            </label>
-
-            {[...documentFiles, ...invoiceFiles].map(
-              (file, index) => (
-                <div
-                  className="transport-file-example"
-                  key={`${file.name}-${index}`}
-                >
-                  <span aria-hidden="true">▤</span>
-
-                  <div>
-                    <strong>{file.name}</strong>
-                    <small>
-                      {(file.size / 1024).toFixed(1)} KB
-                    </small>
-                  </div>
-                </div>
-              ),
-            )}
-
-            <p className="transport-field__hint">
-              Nesta versão de demonstração, apenas os nomes dos
-              documentos são registrados. Os arquivos não são
-              enviados nem armazenados.
-            </p>
+            <small className="transport-field__hint">
+              Anexe pelo menos uma nota fiscal. Os arquivos ficam neste navegador.
+            </small>
           </section>
 
           {/* Etapa 3: data da entrega. */}
-          <section
-            hidden={step !== 3}
-            className="transport-booking-column"
-          >
+          <section hidden={step !== 3} className="transport-booking-column">
             <h2>Selecione a data</h2>
 
             <label className="transport-field">
@@ -716,42 +515,26 @@ function NewAppointment({ internal = false }) {
                 value={selectedDate}
                 min={today}
                 required
-                onChange={(event) =>
-                  changeDate(event.target.value)
-                }
+                onChange={(event) => changeDate(event.target.value)}
               />
             </label>
 
-            <div
-              className="booking-calendar"
-              aria-label={`Calendário de ${monthLabel}`}
-            >
+            <div className="booking-calendar" aria-label={`Calendário de ${monthLabel}`}>
               <header>
-                <button
-                  type="button"
-                  aria-label="Mês anterior"
-                  onClick={() => changeMonth(-1)}
-                >
+                <button type="button" aria-label="Mês anterior" onClick={() => changeMonth(-1)}>
                   ‹
                 </button>
 
                 <strong>{monthLabel}</strong>
 
-                <button
-                  type="button"
-                  aria-label="Próximo mês"
-                  onClick={() => changeMonth(1)}
-                >
+                <button type="button" aria-label="Próximo mês" onClick={() => changeMonth(1)}>
                   ›
                 </button>
               </header>
 
               <div className="booking-calendar__grid">
                 {calendarWeekDays.map((day, index) => (
-                  <span
-                    className="booking-calendar__weekday"
-                    key={`${day}-${index}`}
-                  >
+                  <span className="booking-calendar__weekday" key={`${day}-${index}`}>
                     {day}
                   </span>
                 ))}
@@ -761,16 +544,12 @@ function NewAppointment({ internal = false }) {
                     return <span key={`empty-${index}`} />;
                   }
 
-                  const date = localDateKey(
-                    new Date(year, month, day),
-                  );
+                  const date = localDateKey(new Date(year, month, day));
 
                   return (
                     <button
                       key={date}
-                      className={
-                        selectedDate === date ? "is-selected" : ""
-                      }
+                      className={selectedDate === date ? "is-selected" : ""}
                       type="button"
                       onClick={() => changeDate(date)}
                       aria-pressed={selectedDate === date}
@@ -786,17 +565,12 @@ function NewAppointment({ internal = false }) {
           </section>
 
           {/* Etapa 3: horário da entrega. */}
-          <section
-            hidden={step !== 3}
-            className="transport-booking-column"
-          >
+          <section hidden={step !== 3} className="transport-booking-column">
             <h2>Horários disponíveis</h2>
 
             <div className="booking-time-grid">
               {statuses.map(({ time, status }) => {
-                const selected =
-                  selectedTime === time &&
-                  status === "available";
+                const selected = selectedTime === time && status === "available";
 
                 const statusLabel =
                   status === "occupied"
@@ -828,27 +602,18 @@ function NewAppointment({ internal = false }) {
                   >
                     <span>{time}</span>
 
-                    {status === "occupied" && (
-                      <small>Ocupado</small>
-                    )}
+                    {status === "occupied" && <small>Ocupado</small>}
 
-                    {status === "past" && (
-                      <small>Encerrado</small>
-                    )}
+                    {status === "past" && <small>Encerrado</small>}
                   </button>
                 );
               })}
             </div>
 
-            <p
-              className="booking-slots-counter"
-              aria-live="polite"
-            >
+            <p className="booking-slots-counter" aria-live="polite">
               {freeCount > 0
                 ? `${freeCount} ${
-                    freeCount === 1
-                      ? "horário disponível"
-                      : "horários disponíveis"
+                    freeCount === 1 ? "horário disponível" : "horários disponíveis"
                   } nesta data.`
                 : "Não há horários livres nesta data. Selecione outro dia."}
             </p>
@@ -856,56 +621,31 @@ function NewAppointment({ internal = false }) {
             <div className="booking-selection-summary">
               <span>Entrega selecionada</span>
 
-              <strong>
-                {selectedDate
-                  ? formatDate(selectedDate)
-                  : "Selecione uma data"}
-              </strong>
+              <strong>{selectedDate ? formatDate(selectedDate) : "Selecione uma data"}</strong>
 
-              <b>
-                {selectedTimeValid ? selectedTime : "Sem horário"}
-              </b>
+              <b>{selectedTimeValid ? selectedTime : "Sem horário"}</b>
             </div>
           </section>
 
           {/* Etapa 4: total da entrega e carga de cada fornecedor. */}
           {step === 4 && review && (
             <section className="booking-review">
-              <p>
-                Confira os dados antes de enviar o agendamento para
-                aprovação.
-              </p>
+              <p>Confira os dados antes de enviar o agendamento para aprovação.</p>
 
               <dl>
                 {[
                   ["Transportadora", review.carrier],
-                  [
-                    "Motorista / placa",
-                    [review.driver, review.plate]
-                      .filter(Boolean)
-                      .join(" · "),
-                  ],
+                  ["Motorista / placa", [review.driver, review.plate].filter(Boolean).join(" · ")],
                   ["Fornecedores", review.suppliers.join(", ")],
                   ["Total da carga", cargoSummary(review)],
 
-                  ...review.supplierDetails.map(
-                    (supplier, index) => [
-                      `Carga do fornecedor ${index + 1}`,
-                      `${supplier.name} · ${cargoSummary(supplier)}`,
-                    ],
-                  ),
+                  ...review.supplierDetails.map((supplier, index) => [
+                    `Carga do fornecedor ${index + 1}`,
+                    `${supplier.name} · ${cargoSummary(supplier)}`,
+                  ]),
 
                   ["Observações", review.observations],
-                  ["Número do MDF-e", review.documentNumber],
-                  ["Chave do MDF-e", review.documentKey],
-                  ["Número do CT-e", review.cteNumber],
-                  ["Chave do CT-e", review.cteKey],
-                  [
-                    "Anexos de transporte",
-                    review.documentFiles
-                      .map((file) => file.name)
-                      .join(", "),
-                  ],
+                  ["CT-e anexados", review.documentFiles.map((file) => file.name).join(", ")],
                   ["Notas fiscais", review.invoices.join(", ")],
                   ["Entrega", `${review.date} às ${review.time}`],
                 ].map(([label, value]) => (
@@ -928,6 +668,7 @@ function NewAppointment({ internal = false }) {
             <button
               className="button button--outline"
               type="button"
+              disabled={saving}
               onClick={() => goToStep(step - 1)}
             >
               Voltar
@@ -937,7 +678,7 @@ function NewAppointment({ internal = false }) {
           <button
             className="button button--primary"
             type="submit"
-            disabled={step === 3 && !selectedTimeValid}
+            disabled={saving || (step === 3 && !selectedTimeValid)}
           >
             {
               [

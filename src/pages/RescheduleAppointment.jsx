@@ -1,3 +1,4 @@
+import { documentLabel } from "../utils/fiscalDocuments";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import PageHeader from "../components/PageHeader";
@@ -102,7 +103,7 @@ function RescheduleForm({ appointment, appointments, setAppointments }) {
           <span className="reschedule-label">Transportadora</span>
           <h2>{appointment.carrier}</h2>
           <p>
-            {appointment.documentType} {appointment.documentNumber} ·{" "}
+            {documentLabel(appointment)} ·{" "}
             {appointment.suppliers.join(", ")}
           </p>
         </div>

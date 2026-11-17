@@ -1493,7 +1493,36 @@ a {
 .verification-notice p {
   line-height: 1.5;
 }
+.demo-access {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #f2f7fb;
+}
 
+.demo-access__card {
+  box-sizing: border-box;
+  width: min(100%, 390px);
+  padding: 32px;
+}
+
+.demo-access__brand {
+  margin: 0 0 24px;
+  color: #0875b9;
+  font-weight: 700;
+}
+
+.demo-access__card h1 {
+  margin: 0 0 8px;
+  color: #12334c;
+}
+
+.demo-access__card form {
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+}
 /* RESPONSIVIDADE */
 @media (max-width: 1180px) {
   .page-heading {

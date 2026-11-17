@@ -1,3 +1,4 @@
+import { documentLabel } from "../utils/fiscalDocuments";
 import { deliveryIssues } from "../utils/deliveryIssues";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -22,7 +23,7 @@ const COLUMNS = [
   "Data agendada",
   "Horário",
   "Transportadora",
-  "CT-e / MDF-e",
+  "Documento fiscal",
   "Situação",
   "Ocorrências abertas",
   "Ocorrências resolvidas",
@@ -51,7 +52,7 @@ function reportRows(appointments, filters) {
         time: item.time || "",
         carrier: item.carrier || "",
         document:
-          [item.documentType, item.documentNumber].filter(Boolean).join(" ") || item.document || "",
+          documentLabel(item),
         status: item.status,
         open: issues.length - closed,
         closed,

@@ -1,3 +1,4 @@
+import { documentLabel } from "../utils/fiscalDocuments";
 import { Link, useNavigate } from "react-router-dom";
 import PageHeader from "../components/PageHeader";
 import StatusBadge from "../components/StatusBadge";
@@ -108,7 +109,7 @@ function Dashboard() {
                 <div>
                   <b>{appointment.carrier}</b>
                   <span>
-                    {appointment.documentType} {appointment.documentNumber}
+                    {documentLabel(appointment)}
                   </span>
                 </div>
                 <span className="dashboard-suppliers" title={appointment.suppliers.join(", ")}>
@@ -148,7 +149,7 @@ function Dashboard() {
                 <div>
                   <b>{appointment.carrier}</b>
                   <span>
-                    {appointment.time} · {appointment.documentType} {appointment.documentNumber}
+                    {appointment.time} · {documentLabel(appointment)}
                   </span>
                   <small className="transport-appointment-row__meta">
                     {appointment.volumeTypes.join(" + ")}
